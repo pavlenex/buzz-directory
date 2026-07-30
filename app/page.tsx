@@ -26,12 +26,41 @@ const featuredCommunities = communities.filter(
 const accessLabel = (community: Community) =>
   community.access === "public" ? "Public" : "Invite";
 
-// The `wss://` template-literal type is erased at runtime, so re-check it here
-// before handing a relay to the Buzz app.
-const communityDeepLink = (community: Pick<Community, "name" | "relay">) =>
-  community.relay.startsWith("wss://")
-    ? `buzz://add-community?relay=${encodeURIComponent(community.relay)}&name=${encodeURIComponent(community.name)}`
-    : "#directory";
+/** Token segment after `/invite/` on a public HTTPS share. */
+const inviteCodeFromUrl = (inviteUrl: string): string | null => {
+  try {
+    const path = new URL(inviteUrl).pathname;
+    const parts = path.split("/").filter(Boolean);
+    const inviteIdx = parts.findIndex(
+      (part) => part.toLowerCase() === "invite",
+    );
+    if (inviteIdx < 0 || inviteIdx + 1 >= parts.length) return null;
+    const code = parts[inviteIdx + 1];
+    return code || null;
+  } catch {
+    return null;
+  }
+};
+
+// Public hives with a crawl invite → `buzz://join` (relay + code) so people
+// can actually claim membership. Invite-only / bare-wss → Add Community.
+// The `wss://` template-literal type is erased at runtime, so re-check it.
+const communityDeepLink = (
+  community: Pick<Community, "name" | "relay" | "inviteUrl">,
+) => {
+  if (!community.relay.startsWith("wss://")) return "#directory";
+
+  if (community.inviteUrl) {
+    const code = inviteCodeFromUrl(community.inviteUrl);
+    if (code) {
+      return `buzz://join?relay=${encodeURIComponent(community.relay)}&code=${encodeURIComponent(code)}`;
+    }
+    // Fall back to the HTTPS invite page if the path is unexpected.
+    return community.inviteUrl;
+  }
+
+  return `buzz://add-community?relay=${encodeURIComponent(community.relay)}&name=${encodeURIComponent(community.name)}`;
+};
 
 const buzzdirDeepLink = communityDeepLink({
   name: BUZZDIR_NAME,

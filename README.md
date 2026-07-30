@@ -15,8 +15,9 @@ the repo, and send a patch.
 - Public community catalog from the X crawl of advertised Buzz instances
 - Search and category filters (Builders, Bitcoin, Privacy, Culture, GTM, Labs)
 - Responsive "bento comb" directory with Public / Invite access labels
-- One-click `buzz://add-community` links that open Buzz with the community name
-  and `wss://` relay prefilled
+- One-click Buzz deep links: **Public** hives open `buzz://join` with the
+  crawl invite code; **Invite** hives open `buzz://add-community` with the
+  bare `wss://` relay prefilled
 - Three-field "List your hive" flow with live public/private detection, a
   Buzz-community handoff, and a prefilled GitHub issue fallback
 
@@ -107,11 +108,18 @@ The production build is a static export in `out/`.
 
 All community metadata lives in `app/communities.ts`. Add or edit one object
 there; the featured area, search, filters, and directory cards all use that
-single catalog. The typed `relay` field only accepts `wss://` targets.
+single catalog. The typed `relay` field only accepts `wss://` targets. Public
+entries also set `inviteUrl` to the full `https://…/invite/…` share from X so
+cards can claim membership with a real join code.
 
-Selecting a card opens `buzz://add-community` and passes the encoded relay and
-community name to Buzz Desktop. Buzz validates the `wss://` target and opens its
-Add Community dialog with both fields prefilled.
+Selecting a card:
+
+- **Public** (`inviteUrl` set) → `buzz://join?relay=…&code=…` (invite claim)
+- **Invite** (bare wss only) → `buzz://add-community?relay=…&name=…` (Add
+  Community dialog)
+
+Invite tokens expire; refresh `inviteUrl` from the newest public share when
+links go stale.
 
 ## GitHub Pages
 

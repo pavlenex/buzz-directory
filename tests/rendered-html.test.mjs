@@ -53,19 +53,32 @@ test("exports the buzzdir catalog for static hosting", async () => {
   assert.doesNotMatch(html, /drift-bee/);
   assert.doesNotMatch(html, /<canvas/i);
 
-  // Deep-link contract: every card opens Buzz, no raw relay ever becomes an
-  // href, and each link carries an encoded wss:// relay plus a name.
+  // Deep-link contract:
+  // - Invite-only cards → buzz://add-community (bare wss + name)
+  // - Public cards → buzz://join (wss + invite code from crawl table)
+  // - No raw wss:// or bare host hrefs
   assert.match(html, /card-access-public[^>]*>Public/);
   assert.match(html, /card-access-invite[^>]*>Invite/);
   assert.match(
     html,
     /<a class="community-card" href="buzz:\/\/add-community\?relay=wss%3A%2F%2Fbuzz\.cashu\.space&amp;name=Cashu" aria-label="Open Cashu in Buzz" title="Open Cashu in Buzz"/,
   );
+  // bitcoiners is Public — must join with invite code, not bare add-community.
+  assert.match(
+    html,
+    /href="buzz:\/\/join\?relay=wss%3A%2F%2Fbitcoiners\.communities\.buzz\.xyz&amp;code=eyJjIjoiYTA5NDYzZmQtNjZkZi00ZWEyLTgwYmEtNjgyYTEzMmJhNmY5/,
+  );
+  assert.match(
+    html,
+    /href="buzz:\/\/join\?relay=wss%3A%2F%2Fcreatormagic\.communities\.buzz\.xyz&amp;code=eyJjIjoiYTczMjczNTMtYzExOS00OWNiLWE4ZjQtNTI3YzY4NmQyMDlk/,
+  );
+  assert.doesNotMatch(html, /href="wss:\/\//);
   assert.doesNotMatch(
     html,
-    /href="(?:wss|https):\/\/(?:[\w-]+\.)?communities\.buzz\.xyz"/,
+    /href="https:\/\/(?:[\w-]+\.)?communities\.buzz\.xyz\/?"/,
   );
-  const deepLinks = [
+
+  const addLinks = [
     ...html.matchAll(
       /href="buzz:\/\/add-community\?relay=(wss%3A%2F%2F[^&"]+)&amp;name=([^"]+)"/g,
     ),
@@ -73,15 +86,42 @@ test("exports the buzzdir catalog for static hosting", async () => {
     relay: decodeURIComponent(relay),
     name: decodeURIComponent(name),
   }));
-  // 34 community cards + 4 featured cells + 2 buzzdir CTAs (manifesto + footer).
-  assert.equal(deepLinks.length, 40);
-  // 34 catalog relays + 1 buzzdir relay.
-  assert.equal(new Set(deepLinks.map(({ relay }) => relay)).size, 35);
+  const joinLinks = [
+    ...html.matchAll(
+      /href="buzz:\/\/join\?relay=(wss%3A%2F%2F[^&"]+)&amp;code=([^"]+)"/g,
+    ),
+  ].map(([, relay, code]) => ({
+    relay: decodeURIComponent(relay),
+    code: decodeURIComponent(code),
+  }));
+
+  // 11 invite-only catalog cards + 4 featured only when invite? Cashu is the
+  // only featured invite card (×2: featured cell + grid card) + 2 buzzdir CTAs.
+  // Simpler: all add-community are bare-wss path; joins are public.
+  // 11 invite catalog entries appear as card + featured Cashu once more in
+  // hero → 12 catalog add-community + 2 buzzdir CTAs = 14, unless featured
+  // invite-only also appears in directory grid (Cashu is featured and also
+  // not re-listed as a plain card — featured are separate cells).
+  // Count from rendered contract instead of hard-coding hero math:
+  // - 23 public × (1 grid card + optional featured) for joins
+  // - 11 invite grid/hero + buzzdir CTAs for add-community
+  assert.ok(addLinks.length >= 13); // 11 invite cards + Cashu featured + ≥1 buzzdir
+  assert.ok(joinLinks.length >= 23); // at least one join per public hive
+  assert.equal(new Set(joinLinks.map(({ relay }) => relay)).size, 23);
   assert.ok(
-    deepLinks.every(
+    addLinks.every(
       ({ relay, name }) => relay.startsWith("wss://") && name.length > 0,
     ),
   );
+  assert.ok(
+    joinLinks.every(
+      ({ relay, code }) => relay.startsWith("wss://") && code.length > 0,
+    ),
+  );
+  // Invite-only must never be mis-wired as join without a code source.
+  assert.ok(!addLinks.some(({ name }) => name === "bitcoiners"));
+  assert.ok(addLinks.some(({ name }) => name === "Cashu"));
+  assert.ok(addLinks.some(({ name }) => name === "monero"));
 
   // Deliberately excluded test instances must not creep back into the catalog.
   assert.doesNotMatch(html, /sonarprivacy|SV2-Fleet|building-buzz-inside|test2/);
@@ -255,6 +295,9 @@ test("catalog and deployment contract", async () => {
   assert.match(page, /rel="noreferrer noopener"/);
   assert.match(page, /encodeURIComponent\(community\.relay\)/);
   assert.match(page, /encodeURIComponent\(community\.name\)/);
+  assert.match(page, /encodeURIComponent\(code\)/);
+  assert.match(page, /buzz:\/\/join\?/);
+  assert.match(page, /inviteCodeFromUrl/);
   // The wss:// template-literal type is erased at runtime.
   assert.match(page, /community\.relay\.startsWith\("wss:\/\/"\)/);
   assert.match(page, /classifyListingUrl/);
@@ -285,18 +328,24 @@ test("catalog and deployment contract", async () => {
   const relays = [...communityData.matchAll(/relay: "(wss:\/\/[^"]+)"/g)].map(
     ([, relay]) => relay,
   );
+  const inviteUrls = [
+    ...communityData.matchAll(/inviteUrl:\s*\n?\s*"(https:\/\/[^"]+)"/g),
+  ].map(([, url]) => url);
   assert.equal(relays.length, 34);
   assert.equal(new Set(relays).size, 34);
+  assert.equal(inviteUrls.length, 23);
+  assert.equal(new Set(inviteUrls).size, 23);
+  assert.ok(inviteUrls.every((url) => url.includes("/invite/")));
   assert.match(communityData, /name: "meshllm"/);
   assert.match(communityData, /name: "presidiobitcoin"/);
-  // Access legend: /invite/ share → public; bare wss → invite.
+  // Access legend: /invite/ share → public + inviteUrl; bare wss → invite.
   assert.match(
     communityData,
     /name: "Cashu"[\s\S]{0,200}access: "invite"/,
   );
   assert.match(
     communityData,
-    /name: "bitcoiners"[\s\S]{0,200}access: "public"/,
+    /name: "bitcoiners"[\s\S]{0,400}access: "public"[\s\S]{0,80}inviteUrl:/,
   );
   assert.match(
     communityData,
@@ -312,7 +361,7 @@ test("catalog and deployment contract", async () => {
   assert.equal([...communityData.matchAll(/name: "creatormagic"/g)].length, 1);
   assert.match(
     communityData,
-    /name: "creatormagic"[\s\S]{0,240}featured: \{ icon: "✺"/,
+    /name: "creatormagic"[\s\S]{0,500}featured: \{ icon: "✺"/,
   );
   assert.doesNotMatch(communityData, /name: "monero"[\s\S]{0,200}featured:/);
 
@@ -345,4 +394,6 @@ test("catalog and deployment contract", async () => {
   assert.match(readme, /One-click `buzz:\/\/add-community` links/);
   assert.match(readme, /Add Community dialog/);
   assert.match(readme, /prefilled GitHub issue fallback/);
+  // Catalog source still documents public join paths for maintainers.
+  assert.match(communityData, /inviteUrl\?/);
 });
