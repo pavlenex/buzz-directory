@@ -319,17 +319,17 @@ input:focus-visible {
 
 .featured-cluster {
   position: relative;
-  height: min(640px, 70vh);
-  min-height: 540px;
+  justify-self: center;
+  width: min(550px, 100%);
+  aspect-ratio: 1.4434;
   z-index: 4;
-  transform: rotate(2deg);
 }
 
 .cluster-label {
   position: absolute;
   z-index: 10;
-  top: 2%;
-  right: 11%;
+  top: -46px;
+  right: 0;
   padding: 9px 0;
   background: transparent;
   border-bottom: 2px solid var(--ink);
@@ -340,11 +340,12 @@ input:focus-visible {
 
 .feature-cell {
   position: absolute;
-  width: clamp(170px, 14vw, 220px);
+  width: 40%;
   aspect-ratio: 1.1547;
+  container-type: inline-size;
   clip-path: var(--comb-clip);
   border: 0;
-  padding: 28px 26px;
+  padding: clamp(18px, 11cqi, 26px);
   background: var(--ink);
   color: var(--ink);
   text-decoration: none;
@@ -382,44 +383,52 @@ input:focus-visible {
 }
 
 .feature-icon {
-  font: 800 29px/1 var(--font-display);
+  max-width: 100%;
+  font: 800 clamp(21px, 13cqi, 29px)/1 var(--font-display);
   color: var(--ink);
-  margin-bottom: 18px;
+  margin-bottom: clamp(8px, 7cqi, 16px);
 }
 
 .feature-name {
-  max-width: 148px;
-  font: 900 clamp(15px, 1.3vw, 20px)/0.95 var(--font-display);
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  font: 900 clamp(14px, 8.25cqi, 20px)/1 var(--font-display);
   letter-spacing: -0.035em;
   overflow-wrap: anywhere;
 }
 
 .feature-signal {
-  margin-top: 12px;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  margin-top: clamp(6px, 5cqi, 11px);
   color: rgba(17, 18, 15, 0.68);
-  font: 800 11px/1.1 var(--font-ui);
-  letter-spacing: 0.09em;
+  font: 800 clamp(10px, 5cqi, 11px)/1.15 var(--font-ui);
+  letter-spacing: 0.07em;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
   text-transform: uppercase;
 }
 
 .feature-cell-1 {
-  top: 12%;
-  left: 4%;
+  top: 25%;
+  left: 0;
 }
 
 .feature-cell-2 {
-  top: 12%;
-  left: 39%;
+  top: 0;
+  left: 30%;
 }
 
 .feature-cell-3 {
-  top: 39%;
-  left: 21.5%;
+  top: 50%;
+  left: 30%;
 }
 
 .feature-cell-4 {
-  top: 39%;
-  left: 56.5%;
+  top: 25%;
+  left: 60%;
 }
 
 .feature-cell:hover .feature-icon {
@@ -611,7 +620,7 @@ input:focus-visible {
   max-width: var(--maxw);
   margin: 0 auto;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: clamp(12px, 1.2vw, 18px);
 }
 
@@ -619,13 +628,13 @@ input:focus-visible {
   position: relative;
   overflow: hidden;
   min-width: 0;
-  min-height: 290px;
+  min-height: 0;
   aspect-ratio: 1.5;
   /* Two thirds of the 33 cards are offscreen at first paint and each one
      carries a clip-path plus a nested overflow context. Skip their layout
      and paint until they scroll near. */
   content-visibility: auto;
-  contain-intrinsic-size: auto 290px;
+  contain-intrinsic-size: auto 230px;
   border: 0;
   padding: 2px;
   background: var(--ink);
@@ -645,13 +654,13 @@ input:focus-visible {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  padding: clamp(30px, 2.6vw, 48px) clamp(58px, 6.6vw, 96px);
+  padding: clamp(18px, 1.4vw, 24px) clamp(50px, 4.3vw, 68px);
   background: var(--white);
   clip-path: inherit;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 16px;
+  gap: 7px;
   isolation: isolate;
 }
 
@@ -697,7 +706,7 @@ input:focus-visible {
 .card-title {
   display: block;
   margin: 0;
-  font: 950 clamp(27px, 2.2vw, 38px)/0.96 var(--font-display);
+  font: 950 clamp(23px, 1.65vw, 30px)/0.96 var(--font-display);
   letter-spacing: -0.045em;
   overflow-wrap: anywhere;
 }
@@ -707,8 +716,12 @@ input:focus-visible {
   margin: 0;
   max-width: 540px;
   color: rgba(17, 18, 15, 0.72);
-  font-size: 15px;
-  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  font-size: 14px;
+  line-height: 1.35;
   font-weight: 600;
 }
 
@@ -1004,12 +1017,8 @@ footer {
     grid-template-columns: minmax(0, 1fr) 400px;
   }
 
-  .feature-cell {
-    width: 180px;
-  }
-
   .bento-comb {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
@@ -1034,6 +1043,7 @@ footer {
     width: min(620px, 100%);
     height: auto;
     min-height: 0;
+    aspect-ratio: auto;
     align-content: start;
     transform: none;
     display: grid;
@@ -1127,6 +1137,10 @@ footer {
     align-items: flex-start;
     flex-direction: column;
     gap: 8px;
+  }
+
+  .bento-comb {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 

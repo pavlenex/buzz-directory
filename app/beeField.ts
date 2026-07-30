@@ -22,12 +22,10 @@ import {
 } from "./beeSprites";
 
 /**
- * A real bee does not drift. It holds a point in the air with almost no net
- * translation - wings blurring, body yawing, bobbing a couple of pixels - and
- * then snaps to a new point in a burst of a few hundred milliseconds. Continuous
- * motion at ANY constant speed is wrong: fast reads as a hornet, slow reads as
- * an ant crawling. The duty cycle is what makes it a bee, and it is roughly
- * 85% stationary.
+ * A real bee alternates between holding a point in the air and short, visible
+ * darts. Continuous motion at a constant speed reads as a bird; overly long
+ * pauses read as walking. The short hover duty cycle below keeps wings moving
+ * while making the swarm visibly airborne.
  */
 const HOVERING = 0;
 const DARTING = 1;
@@ -47,20 +45,20 @@ type AnchorGroup = {
 const anchorGroups: readonly AnchorGroup[] = [
   { selector: ".hero h1", share: 5, pad: 52, land: false },
   { selector: ".hero-deck", share: 1.2, pad: 36, land: false },
-  { selector: ".hero-actions .button", share: 1.8, pad: 24, land: true },
-  { selector: ".cluster-label", share: 0.6, pad: 20, land: true },
-  { selector: ".feature-cell", share: 2, pad: 26, land: true },
+  { selector: ".hero-actions .button", share: 1.8, pad: 24, land: false },
+  { selector: ".cluster-label", share: 0.6, pad: 20, land: false },
+  { selector: ".feature-cell", share: 2, pad: 26, land: false },
   { selector: ".scroll-cue", share: 0.6, pad: 18, land: false },
-  { selector: ".buzz-ticker", share: 3, pad: 22, land: true },
+  { selector: ".buzz-ticker", share: 3, pad: 22, land: false },
   { selector: ".section-heading h2", share: 4, pad: 32, land: false },
-  { selector: ".search-box", share: 3, pad: 22, land: true },
-  { selector: ".community-card", share: 22, pad: 18, land: true },
+  { selector: ".search-box", share: 3, pad: 22, land: false },
+  { selector: ".community-card", share: 22, pad: 18, land: false },
   { selector: ".manifesto h2", share: 3, pad: 32, land: false },
-  { selector: ".manifesto-actions .button", share: 3, pad: 20, land: true },
-  { selector: ".manifesto article", share: 5, pad: 22, land: true },
+  { selector: ".manifesto-actions .button", share: 3, pad: 20, land: false },
+  { selector: ".manifesto article", share: 5, pad: 22, land: false },
   { selector: ".list-hive h2", share: 3, pad: 30, land: false },
-  { selector: ".cta-comb", share: 2, pad: 20, land: true },
-  { selector: ".footer-links a", share: 2, pad: 18, land: true },
+  { selector: ".cta-comb", share: 2, pad: 20, land: false },
+  { selector: ".footer-links a", share: 2, pad: 18, land: false },
 ];
 
 type Anchor = {
@@ -248,18 +246,18 @@ export function createBeeField(host: HTMLElement): BeeField {
       viewHeight,
     );
     const area = viewWidth * docHeight;
-    let count = Math.round(clamp(area / 135_000, 26, 110));
-    if (coarse.matches) count = Math.round(count * 0.32);
+    let count = Math.round(clamp(area / 115_000, 30, 125));
+    if (coarse.matches) count = Math.round(count * 0.38);
     const cores = navigator.hardwareConcurrency ?? 8;
     if (cores <= 4) count = Math.round(count * 0.6);
-    return Math.max(count, coarse.matches ? 8 : 16);
+    return Math.max(count, coarse.matches ? 10 : 18);
   }
 
   /** Pick the next point in the air for this bee to hold. */
   function chooseStation(bee: Bee) {
     const anchor = anchors[bee.anchor] ?? anchors[0];
     const theta = Math.random() * TAU;
-    const spread = 0.55 + Math.random() * 0.75;
+    const spread = 1.05 + Math.random() * 0.75;
     const aimX =
       anchor.cx + Math.cos(theta) * (anchor.rx * spread + bee.orbit * 0.4);
     const aimY =
@@ -279,7 +277,7 @@ export function createBeeField(host: HTMLElement): BeeField {
 
   function beginHover(bee: Bee, now: number) {
     bee.state = HOVERING;
-    bee.hoverUntil = now + 0.8 + Math.random() * 2.9;
+    bee.hoverUntil = now + 0.45 + Math.random() * 1.25;
   }
 
   function beginDart(bee: Bee, now: number) {
@@ -288,7 +286,7 @@ export function createBeeField(host: HTMLElement): BeeField {
     // Hard cap on burst length. Whatever distance is left when it expires gets
     // absorbed by the hover spring, which reads as the bee arriving and
     // settling rather than braking.
-    bee.deadline = now + 0.24 + Math.random() * 0.22;
+    bee.deadline = now + 0.3 + Math.random() * 0.28;
   }
 
   function migrate(bee: Bee, now: number) {
@@ -307,7 +305,7 @@ export function createBeeField(host: HTMLElement): BeeField {
       }
     }
     bee.anchor = best;
-    bee.nextMigrate = now + 14 + Math.random() * 26;
+    bee.nextMigrate = now + 9 + Math.random() * 20;
   }
 
   function spawnBee(now: number): Bee {
@@ -331,9 +329,9 @@ export function createBeeField(host: HTMLElement): BeeField {
       shiverPhase: Math.random() * TAU,
       shiverAmount: 0.02 + Math.random() * 0.04,
       wingPhase: Math.random() * FLIGHT_FRAMES,
-      wingRate: 44 + Math.random() * 26,
-      orbit: 15 + Math.random() * 45,
-      hopRange: 45 + Math.random() * 85,
+      wingRate: 52 + Math.random() * 28,
+      orbit: 18 + Math.random() * 50,
+      hopRange: 65 + Math.random() * 95,
       stationX: 0,
       stationY: 0,
       bobPhase: Math.random() * TAU,

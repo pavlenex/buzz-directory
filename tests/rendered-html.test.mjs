@@ -146,6 +146,9 @@ test("keeps the swarm off the main thread and out of the DOM", async () => {
   assert.match(field, /stationX/);
   assert.match(field, /bobAmount/);
   assert.match(field, /shortestTurn/);
+  assert.doesNotMatch(field, /land: true/);
+  assert.match(field, /area \/ 115_000/);
+  assert.match(field, /hoverUntil = now \+ 0\.45/);
 
   // Per-frame cost guards. drop-shadow/shadowBlur are what made the old DOM
   // swarm slow; the canvas.width guard stops a 33MB realloc per keystroke.
@@ -197,7 +200,16 @@ test("keeps the page cheap to ship", async () => {
   assert.match(styles, /@media \(max-width: 420px\)/);
   assert.match(styles, /--comb-clip: polygon\(/);
   assert.match(styles, /clip-path: var\(--comb-card-clip\)/);
+  assert.match(styles, /container-type: inline-size/);
+  assert.match(styles, /8\.25cqi/);
   assert.match(styles, /\.search-box \{[\s\S]*position: sticky/);
+  assert.match(
+    styles,
+    /\.bento-comb \{[\s\S]*grid-template-columns: repeat\(4, minmax\(0, 1fr\)\)/,
+  );
+  assert.match(styles, /\.feature-cell-1 \{[\s\S]*top: 25%;[\s\S]*left: 0/);
+  assert.match(styles, /\.feature-cell-4 \{[\s\S]*top: 25%;[\s\S]*left: 60%/);
+  assert.doesNotMatch(styles, /\.featured-cluster \{[\s\S]{0,300}rotate\(/);
 
   // Runtime deps stay at exactly next + react + react-dom.
   const { dependencies } = JSON.parse(packageJson);
