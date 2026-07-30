@@ -380,15 +380,9 @@ export default function Home() {
             </p>
           </div>
         </div>
-        <div className="swarm-hint" aria-hidden="true">
-          <span />
-          Move to conduct the swarm
-        </div>
-
         <div className="featured-cluster" aria-label="Featured communities">
           <div className="cluster-label">
             <span>FEATURED HIVES</span>
-            <span aria-hidden="true">04 / 28</span>
           </div>
           {featured.map((community, index) => (
             <button

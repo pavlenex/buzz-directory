@@ -20,22 +20,26 @@ test("exports the Buzz public-community directory for static hosting", async () 
   assert.match(html, /bento-comb/);
   assert.match(html, /og\.png/);
   assert.doesNotMatch(html, /THE PUBLIC SQUARES OF BUZZ/i);
+  assert.doesNotMatch(html, /MOVE TO CONDUCT THE SWARM/i);
+  assert.doesNotMatch(html, /04\s*\/\s*28/);
   assert.doesNotMatch(html, /codex-preview/);
   assert.doesNotMatch(html, /Your site is taking shape/);
 });
 
 test("includes the shader swarm and GitHub Pages deployment contract", async () => {
-  const [page, swarm, layout, packageJson, nextConfig, workflow] = await Promise.all([
-    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../app/BeeSwarm.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../package.json", import.meta.url), "utf8"),
-    readFile(new URL("../next.config.ts", import.meta.url), "utf8"),
-    readFile(
-      new URL("../.github/workflows/deploy-pages.yml", import.meta.url),
-      "utf8",
-    ),
-  ]);
+  const [page, swarm, styles, layout, packageJson, nextConfig, workflow] =
+    await Promise.all([
+      readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+      readFile(new URL("../app/BeeSwarm.tsx", import.meta.url), "utf8"),
+      readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+      readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
+      readFile(new URL("../package.json", import.meta.url), "utf8"),
+      readFile(new URL("../next.config.ts", import.meta.url), "utf8"),
+      readFile(
+        new URL("../.github/workflows/deploy-pages.yml", import.meta.url),
+        "utf8",
+      ),
+    ]);
 
   assert.match(page, /const communities/);
   assert.match(page, /Search communities/);
@@ -44,6 +48,12 @@ test("includes the shader swarm and GitHub Pages deployment contract", async () 
   assert.match(swarm, /getContext\("webgl"/);
   assert.match(swarm, /IntersectionObserver/);
   assert.match(swarm, /prefers-reduced-motion: reduce/);
+  assert.match(swarm, /fillMask/);
+  assert.match(swarm, /webglcontextlost/);
+  assert.doesNotMatch(swarm, /smoothstep\(0\.10,\s*-0\.04/);
+  assert.match(styles, /@keyframes fallback-bee-flight/);
+  assert.match(styles, /grid-template-columns: repeat\(3/);
+  assert.doesNotMatch(styles, /community-card-inner::after/);
   assert.match(layout, /Find your hive/);
   assert.match(layout, /\.\/og\.png/);
   assert.match(nextConfig, /output: "export"/);

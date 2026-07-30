@@ -32,6 +32,10 @@ const fragmentShaderSource = `
     return (length(point / radius) - 1.0) * min(radius.x, radius.y);
   }
 
+  float fillMask(float distance, float softness) {
+    return 1.0 - smoothstep(-softness, softness, distance);
+  }
+
   void main() {
     float aspect = u_resolution.x / u_resolution.y;
     vec2 field = gl_FragCoord.xy / u_resolution - 0.5;
@@ -55,7 +59,7 @@ const fragmentShaderSource = `
         (hash(beeIndex * 4.73 + 2.0) - 0.5) * 0.94
       );
 
-      float phase = u_time * (0.48 + seed * 0.42) + seed * 18.0;
+      float phase = u_time * (0.62 + seed * 0.48) + seed * 18.0;
       float attraction = 0.34 + 0.28 * sin(seed * 9.0 + u_time * 0.22);
       vec2 orbit = vec2(
         cos(phase * (0.82 + seed * 0.31)),
@@ -74,27 +78,32 @@ const fragmentShaderSource = `
       float scale = 0.0105 + seed * 0.0085;
       vec2 bee = rotate2d(-angle) * (field - center) / scale;
 
-      float body = smoothstep(0.10, -0.04, ellipse(bee, vec2(1.0, 0.54)));
-      float head = smoothstep(0.10, -0.04, ellipse(bee - vec2(0.78, 0.0), vec2(0.43)));
+      float body = fillMask(ellipse(bee, vec2(1.0, 0.54)), 0.07);
+      float head = fillMask(
+        ellipse(bee - vec2(0.78, 0.0), vec2(0.43)),
+        0.07
+      );
 
       vec2 upperWingPoint = rotate2d(-0.48) * (bee - vec2(-0.12, 0.54));
       vec2 lowerWingPoint = rotate2d(0.48) * (bee - vec2(-0.12, -0.54));
-      float upperWing = smoothstep(
-        0.09,
-        -0.05,
-        ellipse(upperWingPoint, vec2(0.58, 0.27))
+      float upperWing = fillMask(
+        ellipse(upperWingPoint, vec2(0.58, 0.27)),
+        0.07
       );
-      float lowerWing = smoothstep(
-        0.09,
-        -0.05,
-        ellipse(lowerWingPoint, vec2(0.58, 0.27))
+      float lowerWing = fillMask(
+        ellipse(lowerWingPoint, vec2(0.58, 0.27)),
+        0.07
       );
       float wings = max(upperWing, lowerWing) * (1.0 - body * 0.72);
 
-      float stripeOne = smoothstep(0.19, 0.07, abs(bee.x + 0.25));
-      float stripeTwo = smoothstep(0.18, 0.07, abs(bee.x - 0.27));
+      float stripeOne = 1.0 - smoothstep(0.07, 0.19, abs(bee.x + 0.25));
+      float stripeTwo = 1.0 - smoothstep(0.07, 0.18, abs(bee.x - 0.27));
       float stripes = max(stripeOne, stripeTwo) * body;
-      float eye = smoothstep(0.08, 0.01, length(bee - vec2(1.02, 0.13)));
+      float eye = 1.0 - smoothstep(
+        0.01,
+        0.08,
+        length(bee - vec2(1.02, 0.13))
+      );
 
       vec3 beeColor = vec3(0.0);
       beeColor = mix(beeColor, vec3(1.0, 0.99, 0.88), wings * 0.68);
@@ -142,7 +151,31 @@ export function BeeSwarm() {
     const shell = shellRef.current;
     const canvas = canvasRef.current;
     const hero = canvas?.closest<HTMLElement>(".hero");
-    const gl = canvas?.getContext("webgl", {
+    const fallback = shell?.querySelector<HTMLElement>(".bee-fallback");
+
+    if (!shell || !canvas || !hero || !fallback) return;
+
+    const reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    const targetPointer = { x: 0.52, y: 0.55 };
+    const movePointer = (event: PointerEvent) => {
+      const rect = hero.getBoundingClientRect();
+      targetPointer.x = (event.clientX - rect.left) / rect.width;
+      targetPointer.y = 1 - (event.clientY - rect.top) / rect.height;
+      if (!reducedMotion) {
+        fallback.style.transform = `translate(
+          ${(targetPointer.x - 0.5) * 34}px,
+          ${(0.5 - targetPointer.y) * 24}px
+        )`;
+      }
+    };
+
+    hero.addEventListener("pointermove", movePointer, { passive: true });
+    const cleanupPointer = () =>
+      hero.removeEventListener("pointermove", movePointer);
+
+    const gl = canvas.getContext("webgl", {
       alpha: true,
       antialias: false,
       depth: false,
@@ -150,7 +183,9 @@ export function BeeSwarm() {
       preserveDrawingBuffer: false,
     });
 
-    if (!shell || !canvas || !hero || !gl) return;
+    if (!gl) {
+      return cleanupPointer;
+    }
 
     const vertexShader = compileShader(
       gl,
@@ -162,15 +197,28 @@ export function BeeSwarm() {
       gl.FRAGMENT_SHADER,
       fragmentShaderSource,
     );
-    if (!vertexShader || !fragmentShader) return;
+    if (!vertexShader || !fragmentShader) {
+      if (vertexShader) gl.deleteShader(vertexShader);
+      if (fragmentShader) gl.deleteShader(fragmentShader);
+      return cleanupPointer;
+    }
 
     const program = gl.createProgram();
-    if (!program) return;
+    if (!program) {
+      gl.deleteShader(vertexShader);
+      gl.deleteShader(fragmentShader);
+      return cleanupPointer;
+    }
 
     gl.attachShader(program, vertexShader);
     gl.attachShader(program, fragmentShader);
     gl.linkProgram(program);
-    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) return;
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+      gl.deleteProgram(program);
+      gl.deleteShader(vertexShader);
+      gl.deleteShader(fragmentShader);
+      return cleanupPointer;
+    }
 
     const position = gl.getAttribLocation(program, "a_position");
     const resolution = gl.getUniformLocation(program, "u_resolution");
@@ -178,7 +226,20 @@ export function BeeSwarm() {
     const time = gl.getUniformLocation(program, "u_time");
     const beeCount = gl.getUniformLocation(program, "u_bee_count");
     const buffer = gl.createBuffer();
-    if (!buffer) return;
+    if (
+      position < 0 ||
+      !resolution ||
+      !pointer ||
+      !time ||
+      !beeCount ||
+      !buffer
+    ) {
+      if (buffer) gl.deleteBuffer(buffer);
+      gl.deleteProgram(program);
+      gl.deleteShader(vertexShader);
+      gl.deleteShader(fragmentShader);
+      return cleanupPointer;
+    }
 
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
     gl.bufferData(
@@ -192,13 +253,7 @@ export function BeeSwarm() {
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
-    shell.dataset.ready = "true";
-
-    const reducedMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
     const coarsePointer = window.matchMedia("(pointer: coarse)").matches;
-    const targetPointer = { x: 0.52, y: 0.55 };
     const smoothPointer = { ...targetPointer };
     let visible = true;
     let frame = 0;
@@ -220,22 +275,16 @@ export function BeeSwarm() {
       }
     };
 
-    const movePointer = (event: PointerEvent) => {
-      const rect = hero.getBoundingClientRect();
-      targetPointer.x = (event.clientX - rect.left) / rect.width;
-      targetPointer.y = 1 - (event.clientY - rect.top) / rect.height;
-    };
-
     const draw = (now: number) => {
-      smoothPointer.x += (targetPointer.x - smoothPointer.x) * 0.075;
-      smoothPointer.y += (targetPointer.y - smoothPointer.y) * 0.075;
+      smoothPointer.x += (targetPointer.x - smoothPointer.x) * 0.1;
+      smoothPointer.y += (targetPointer.y - smoothPointer.y) * 0.1;
 
       gl.clearColor(0, 0, 0, 0);
       gl.clear(gl.COLOR_BUFFER_BIT);
       gl.uniform2f(resolution, canvas.width, canvas.height);
       gl.uniform2f(pointer, smoothPointer.x, smoothPointer.y);
       gl.uniform1f(time, (now - startTime) / 1000);
-      gl.uniform1f(beeCount, coarsePointer ? 18 : 30);
+      gl.uniform1f(beeCount, coarsePointer ? 16 : 28);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
 
       if (!reducedMotion && visible && !document.hidden) {
@@ -264,19 +313,27 @@ export function BeeSwarm() {
       }
     };
 
+    const onContextLost = (event: Event) => {
+      event.preventDefault();
+      delete shell.dataset.ready;
+      window.cancelAnimationFrame(frame);
+    };
+
     resize();
     draw(performance.now());
+    shell.dataset.ready = "true";
 
     observer.observe(hero);
-    hero.addEventListener("pointermove", movePointer, { passive: true });
     window.addEventListener("resize", resize, { passive: true });
     document.addEventListener("visibilitychange", onVisibilityChange);
+    canvas.addEventListener("webglcontextlost", onContextLost);
 
     return () => {
       observer.disconnect();
-      hero.removeEventListener("pointermove", movePointer);
+      cleanupPointer();
       window.removeEventListener("resize", resize);
       document.removeEventListener("visibilitychange", onVisibilityChange);
+      canvas.removeEventListener("webglcontextlost", onContextLost);
       window.cancelAnimationFrame(frame);
       gl.deleteBuffer(buffer);
       gl.deleteProgram(program);
