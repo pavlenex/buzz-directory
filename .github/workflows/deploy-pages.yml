@@ -31,8 +31,9 @@ jobs:
       - name: Configure GitHub Pages
         id: pages
         uses: actions/configure-pages@v5
-        with:
-          static_site_generator: next
+        # Do not set static_site_generator: next — it writes a CJS next.config.js
+        # that fails under package.json "type": "module" + next.config.ts.
+        # basePath is handled in next.config.ts via PAGES_BASE_PATH / GITHUB_REPOSITORY.
 
       - name: Install dependencies
         run: npm ci
@@ -42,7 +43,7 @@ jobs:
         env:
           NEXT_TELEMETRY_DISABLED: 1
           NEXT_PUBLIC_SITE_URL: ${{ steps.pages.outputs.base_url }}
-          PAGES_BASE_PATH: ${{ vars.PAGES_BASE_PATH }}
+          PAGES_BASE_PATH: ${{ steps.pages.outputs.base_path }}
 
       - name: Upload static site
         uses: actions/upload-pages-artifact@v4
