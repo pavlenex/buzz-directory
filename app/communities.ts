@@ -47,6 +47,7 @@ export type Community = {
  * - RESEARCH/BUZZ_COMMUNITIES_DIRECTORY_X_CRAWL_2026_07_30.md
  * - RESEARCH/BUZZ_COMMUNITIES_INVITE_URLS_X_CRAWL_2026_07_30.md
  * - Owner add: meshllm, presidiobitcoin (relay only)
+ * - Direct X add: virtualoranges (relay only)
  */
 export const communities: readonly Community[] = [
   // --- Featured (hero order; not re-sorted with the directory grid) ---
@@ -333,5 +334,12 @@ export const communities: readonly Community[] = [
     relay: "wss://vibecoding.communities.buzz.xyz",
     inviteUrl:
       "https://vibecoding.communities.buzz.xyz/invite/eyJjIjoiZjcyNDY1ODQtNjUwOC00NzVhLTg0YTgtNTBlMWE1Y2EyNDljIiwiciI6Im1lbWJlciIsImUiOjE3ODc2ODA0NzUsIm4iOiJGaVVjWTJjM28wa1ZoUTlqcWFOVWNBIn0.mV5XkkA6vht98VyqdYCGYXPgZnSSZcBm5fleVULzqIc",
+  },
+  {
+    name: "Virtual Oranges",
+    description:
+      "AI automation builders working with Hermes Agent, Claude Code, robotics, and content workflows.",
+    category: "Builders",
+    relay: "wss://virtualoranges.communities.buzz.xyz",
   },
 ];

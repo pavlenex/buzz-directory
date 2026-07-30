@@ -45,7 +45,14 @@ test("exports the buzzdir catalog for static hosting", async () => {
   assert.match(html, /List on GitHub/);
   assert.match(html, /Build on Buzz/);
   assert.match(html, /Open prefilled GitHub issue/);
-  for (const name of ["Cashu", "LDK", "monero", "bitcoiners", "vibecoding"]) {
+  for (const name of [
+    "Cashu",
+    "LDK",
+    "monero",
+    "bitcoiners",
+    "vibecoding",
+    "Virtual Oranges",
+  ]) {
     assert.match(html, new RegExp(name));
   }
 
@@ -66,7 +73,7 @@ test("exports the buzzdir catalog for static hosting", async () => {
       /<a class="community-card" href="([^"]+)"[\s\S]*?<span class="card-access card-access-(public|invite)">/g,
     ),
   ];
-  assert.equal(cards.length, 36);
+  assert.equal(cards.length, 37);
   for (const [, href, access] of cards) {
     if (access === "public") {
       assert.match(href, /^https:\/\//);
@@ -405,14 +412,18 @@ test("catalog and deployment contract", async () => {
   const publicUrls = [
     ...communityData.matchAll(/publicUrl:\s*\n?\s*"(https:\/\/[^"]+)"/g),
   ].map(([, url]) => url);
-  assert.equal(relays.length, 36);
-  assert.equal(new Set(relays).size, 36);
+  assert.equal(relays.length, 37);
+  assert.equal(new Set(relays).size, 37);
   assert.equal(inviteUrls.length, 16);
   assert.equal(new Set(inviteUrls).size, 16);
   assert.ok(inviteUrls.every((url) => url.includes("/invite/")));
   assert.deepEqual(publicUrls, ["https://buzz.cashu.space"]);
   assert.match(communityData, /name: "meshllm"/);
   assert.match(communityData, /name: "presidiobitcoin"/);
+  assert.match(
+    communityData,
+    /name: "Virtual Oranges"[\s\S]{0,320}relay: "wss:\/\/virtualoranges\.communities\.buzz\.xyz"/,
+  );
   // inviteUrl itself is the source of truth. There is no duplicate access flag.
   assert.doesNotMatch(communityData, /CommunityAccess|access:/);
   assert.match(
