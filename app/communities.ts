@@ -44,13 +44,21 @@ export const communities: readonly Community[] = [
     featured: { icon: "◎", note: "custom host" },
   },
   {
+    name: "creatormagic",
+    description:
+      "FREE Creator Magic community for creators collaborating with agents.",
+    category: "Culture",
+    relay: "wss://creatormagic.communities.buzz.xyz",
+    access: "public",
+    featured: { icon: "✺", note: "creators" },
+  },
+  {
     name: "monero",
     description:
       "Monero hive with explicit open-join instructions: paste the relay into Add Community.",
     category: "Privacy",
     relay: "wss://monero.communities.buzz.xyz",
     access: "public",
-    featured: { icon: "◉", note: "open join" },
   },
   {
     name: "designers",
@@ -257,14 +265,6 @@ export const communities: readonly Community[] = [
     category: "Culture",
     relay: "wss://thakaly.communities.buzz.xyz",
     access: "invite",
-  },
-  {
-    name: "creatormagic",
-    description:
-      "FREE Creator Magic community for creators collaborating with agents.",
-    category: "Culture",
-    relay: "wss://creatormagic.communities.buzz.xyz",
-    access: "public",
   },
   {
     name: "devin-builders",

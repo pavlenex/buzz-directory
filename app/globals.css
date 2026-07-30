@@ -1,8 +1,43 @@
-@import "tailwindcss";
+/*
+ * No CSS framework. Tailwind was imported here but the markup uses zero
+ * utility classes, so all it shipped was preflight. These are the only
+ * preflight resets this stylesheet actually relies on.
+ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+h1,
+h2,
+h3,
+h4,
+p,
+figure,
+blockquote {
+  margin: 0;
+}
+
+button {
+  padding: 0;
+  background: transparent;
+  border: 0;
+}
+
+img,
+svg,
+canvas {
+  display: block;
+}
+
+::-webkit-search-decoration,
+::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+}
 
 :root {
   --yellow: #f7ff00;
-  --yellow-soft: #eef658;
   --ink: #11120f;
   --paper: #f3f0e7;
   --white: #fffef8;
@@ -11,13 +46,15 @@
   --green: #37d67a;
   --line: 2px solid var(--ink);
   --shadow: 7px 7px 0 var(--ink);
+  /* One horizontal gutter and one vertical rhythm for every section, so the
+     page edges line up instead of each block inventing its own padding. */
+  --gutter: clamp(20px, 5vw, 88px);
+  --section-y: clamp(56px, 6vw, 104px);
+  --maxw: 1500px;
+  --tap: 46px;
   --font-display: "Aptos Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
   --font-ui: "Aptos", "Helvetica Neue", Helvetica, Arial, sans-serif;
   --comb-pattern: url("data:image/svg+xml,%3Csvg width='144' height='84' viewBox='0 0 144 84' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%2311120f' stroke-opacity='.055' stroke-width='1'%3E%3Cpath d='M24 1h48l24 41-24 41H24L0 42Z'/%3E%3Cpath d='M96-41h48l24 41-24 41H96L72 0Z'/%3E%3Cpath d='M96 43h48l24 41-24 41H96L72 84Z'/%3E%3C/g%3E%3C/svg%3E");
-}
-
-* {
-  box-sizing: border-box;
 }
 
 html {
@@ -31,7 +68,28 @@ body {
   color: var(--ink);
   font-family: var(--font-ui);
   font-size: 16px;
+  line-height: 1.5;
   overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+}
+
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+img,
+svg {
+  max-width: 100%;
+}
+
+:target {
+  scroll-margin-top: 24px;
 }
 
 main {
@@ -82,80 +140,19 @@ input:focus-visible {
   border: 0;
 }
 
-.nav-shell {
-  position: relative;
-  z-index: 20;
-  height: 84px;
-  padding: 0 clamp(22px, 4vw, 68px);
-  background: var(--yellow);
-  border-bottom: var(--line);
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  gap: 30px;
-}
-
-.brand {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  width: fit-content;
-  font-weight: 950;
-  letter-spacing: -0.04em;
-  font-size: 17px;
-  font-family: var(--font-display);
-}
-
-.brand-mark {
-  width: 34px;
-  height: 30px;
-  display: grid;
-  place-items: center;
-  background: var(--ink);
-  color: var(--yellow);
-  font: 900 17px/1 Arial, sans-serif;
-  clip-path: polygon(24% 0, 76% 0, 100% 50%, 76% 100%, 24% 100%, 0 50%);
-}
-
-.nav-links {
-  display: flex;
-  gap: 34px;
-  font: 800 13px/1 var(--font-ui);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-.nav-links a {
-  position: relative;
-}
-
-.nav-links a::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 100%;
-  bottom: -7px;
-  height: 3px;
-  background: var(--ink);
-  transition: right 180ms ease;
-}
-
-.nav-links a:hover::after {
-  right: 0;
-}
-
 .button {
   border: var(--line);
   border-radius: 0;
-  min-height: 46px;
-  padding: 0 20px;
+  min-height: var(--tap);
+  padding: 0 22px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 20px;
+  gap: 14px;
   cursor: pointer;
+  text-align: center;
   text-transform: uppercase;
-  font: 900 13px/1 var(--font-ui);
+  font: 900 13px/1.15 var(--font-ui);
   letter-spacing: 0.06em;
   transition:
     transform 160ms ease,
@@ -183,29 +180,48 @@ input:focus-visible {
   color: var(--ink);
 }
 
-.button-big {
-  min-height: 58px;
-  padding-inline: 28px;
+/* Secondary action on light sections. */
+.button-ghost {
+  background: transparent;
+  color: var(--ink);
 }
 
-.nav-cta {
-  justify-self: end;
+.button-ghost:hover {
+  background: var(--white);
+}
+
+/* Secondary action on the blue section. */
+.button-outline-light {
+  background: transparent;
+  color: var(--white);
+  border-color: var(--white);
+}
+
+.button-outline-light:hover {
+  background: var(--white);
+  color: var(--blue);
+  box-shadow: 5px 5px 0 var(--ink);
+}
+
+.button-big {
+  min-height: 58px;
+  padding-inline: 30px;
 }
 
 .hero {
-  min-height: calc(100vh - 84px);
+  min-height: min(100svh, 940px);
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  padding: clamp(70px, 8vw, 130px) clamp(22px, 4vw, 68px) 78px;
+  padding: clamp(56px, 7vw, 120px) var(--gutter) clamp(80px, 8vw, 120px);
   background-color: var(--yellow);
   background-image: var(--comb-pattern);
   background-size: 144px 84px;
   border-bottom: var(--line);
   display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(480px, 0.95fr);
+  grid-template-columns: minmax(0, 1.05fr) minmax(440px, 0.95fr);
   align-items: center;
-  gap: clamp(26px, 4vw, 80px);
+  gap: clamp(40px, 5vw, 88px);
 }
 
 .hero-copy {
@@ -221,9 +237,9 @@ input:focus-visible {
 }
 
 .hero h1 {
-  margin: 0 0 28px;
+  margin: 0 0 clamp(22px, 2.6vw, 34px);
   font-family: var(--font-display);
-  font-size: clamp(78px, 10.5vw, 174px);
+  font-size: clamp(58px, 10.5vw, 174px);
   line-height: 0.79;
   letter-spacing: -0.082em;
   text-transform: uppercase;
@@ -239,104 +255,50 @@ input:focus-visible {
 }
 
 .bee-drift-field {
-  position: absolute;
+  position: fixed;
   z-index: 3;
   inset: 0;
-  overflow: hidden;
   pointer-events: none;
   user-select: none;
+  contain: layout paint;
 }
 
-.drift-bee {
+.bee-drift-canvas {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: var(--bee-size);
-  color: var(--bee-body);
-  filter:
-    drop-shadow(0 0 5px var(--bee-glow))
-    drop-shadow(0 0 16px var(--bee-glow));
-  opacity: 0;
-  transform-origin: center;
-  will-change: transform;
-}
-
-.drift-bee svg {
+  inset: 0;
   display: block;
   width: 100%;
-  overflow: visible;
-}
-
-.bee-wing {
-  fill: var(--bee-wing);
-  stroke: var(--ink);
-  stroke-width: 1.8;
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: bee-wing-buzz var(--wing-cycle) cubic-bezier(0.2, 0.8, 0.2, 1)
-    var(--wing-delay) infinite;
-}
-
-.bee-wing-bottom {
-  animation-direction: reverse;
-}
-
-.bee-body,
-.bee-head {
-  fill: currentColor;
-  stroke: var(--ink);
-  stroke-width: 2;
-}
-
-.bee-stripe {
-  fill: none;
-  stroke: var(--ink);
-  stroke-width: 4.5;
-}
-
-.bee-eye,
-.bee-stinger {
-  fill: var(--ink);
-}
-
-.drift-bee-acid {
-  --bee-body: #f7ff00;
-  --bee-wing: #fffef8;
-  --bee-glow: rgba(247, 255, 0, 0.75);
-}
-
-.drift-bee-pink {
-  --bee-body: #ff5cbe;
-  --bee-wing: #ffd6ef;
-  --bee-glow: rgba(255, 92, 190, 0.72);
-}
-
-.drift-bee-blue {
-  --bee-body: #6075ff;
-  --bee-wing: #dce2ff;
-  --bee-glow: rgba(60, 87, 255, 0.72);
-}
-
-.drift-bee-mint {
-  --bee-body: #37d67a;
-  --bee-wing: #d9ffe8;
-  --bee-glow: rgba(55, 214, 122, 0.7);
+  height: 100%;
 }
 
 .hero-deck {
   max-width: 640px;
   margin: 0;
-  font-size: clamp(18px, 2vw, 26px);
-  line-height: 1.23;
+  font-size: clamp(17px, 1.9vw, 25px);
+  line-height: 1.32;
   font-weight: 650;
-  letter-spacing: -0.025em;
+  letter-spacing: -0.02em;
+}
+
+.hero-deck a {
+  text-decoration: underline;
+  text-decoration-thickness: 0.11em;
+  text-underline-offset: 0.13em;
+  text-decoration-skip-ink: none;
+}
+
+.hero-deck a:hover {
+  background: var(--ink);
+  color: var(--yellow);
+  text-decoration-color: transparent;
 }
 
 .hero-actions {
   display: flex;
   align-items: center;
-  gap: 28px;
-  margin-top: 36px;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: clamp(30px, 3.4vw, 44px);
 }
 
 .featured-cluster {
@@ -365,13 +327,11 @@ input:focus-visible {
   width: clamp(170px, 14vw, 220px);
   aspect-ratio: 1.13;
   clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%);
-}
-
-.feature-cell {
   border: 0;
   padding: 28px 26px;
   background: var(--ink);
   color: var(--ink);
+  text-decoration: none;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -403,14 +363,6 @@ input:focus-visible {
 
 .feature-cell:hover::before {
   background: var(--ink);
-}
-
-.feature-cell-copied::before {
-  background: var(--green);
-}
-
-.feature-cell-copied:hover::before {
-  background: var(--green);
 }
 
 .feature-icon {
@@ -502,8 +454,10 @@ input:focus-visible {
 
 .directory {
   position: relative;
-  overflow: hidden;
-  padding: clamp(78px, 10vw, 150px) clamp(22px, 5vw, 84px);
+  /* clip, not hidden: `overflow: hidden` would make this a scroll container
+     and kill `position: sticky` on the search bar below. */
+  overflow: clip;
+  padding: var(--section-y) var(--gutter);
   background-color: var(--paper);
   background-image: var(--comb-pattern);
   background-size: 144px 84px;
@@ -512,35 +466,35 @@ input:focus-visible {
 .section-heading {
   display: grid;
   grid-template-columns: 1.2fr 0.8fr;
-  gap: clamp(40px, 8vw, 140px);
+  gap: clamp(24px, 5vw, 90px);
   align-items: end;
-  max-width: 1500px;
-  margin: 0 auto 58px;
+  max-width: var(--maxw);
+  margin: 0 auto clamp(28px, 3vw, 44px);
 }
 
 .section-heading h2,
 .manifesto h2,
 .list-hive h2 {
-  margin: 18px 0 0;
+  margin: 12px 0 0;
   font-family: var(--font-display);
-  font-size: clamp(60px, 7.2vw, 118px);
-  line-height: 0.87;
-  letter-spacing: -0.062em;
+  font-size: clamp(34px, 4.8vw, 74px);
+  line-height: 0.92;
+  letter-spacing: -0.05em;
   text-transform: uppercase;
   font-weight: 950;
 }
 
 .section-heading p {
-  margin: 0 0 5px;
-  font-size: clamp(17px, 1.6vw, 22px);
-  line-height: 1.35;
+  margin: 0 0 4px;
+  font-size: clamp(16px, 1.35vw, 19px);
+  line-height: 1.4;
   font-weight: 600;
 }
 
 .directory-tools {
-  max-width: 1500px;
+  max-width: var(--maxw);
   margin: 0 auto;
-  padding: 22px;
+  padding: clamp(14px, 1.6vw, 22px);
   background: var(--white);
   border: var(--line);
   box-shadow: var(--shadow);
@@ -588,15 +542,15 @@ input:focus-visible {
 }
 
 .filters {
-  margin-top: 18px;
+  margin-top: 14px;
   display: flex;
-  gap: 9px;
+  gap: 10px;
   flex-wrap: wrap;
 }
 
 .filters button {
-  min-height: 40px;
-  padding: 0 16px;
+  min-height: 44px;
+  padding: 0 18px;
   border: 1.5px solid var(--ink);
   background: transparent;
   cursor: pointer;
@@ -612,7 +566,7 @@ input:focus-visible {
 }
 
 .results-line {
-  max-width: 1500px;
+  max-width: var(--maxw);
   margin: 42px auto 18px;
   display: flex;
   justify-content: space-between;
@@ -625,24 +579,30 @@ input:focus-visible {
 }
 
 .bento-comb {
-  max-width: 1500px;
+  max-width: var(--maxw);
   margin: 0 auto;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 18px;
+  gap: clamp(12px, 1.2vw, 18px);
 }
 
 .community-card {
   position: relative;
   overflow: hidden;
   min-width: 0;
-  min-height: 300px;
+  min-height: 290px;
+  /* Two thirds of the 33 cards are offscreen at first paint and each one
+     carries a clip-path plus a nested overflow context. Skip their layout
+     and paint until they scroll near. */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 290px;
   border: 0;
   padding: 2px;
   background: var(--ink);
   color: inherit;
   font: inherit;
   text-align: left;
+  text-decoration: none;
   clip-path: polygon(7% 0, 93% 0, 100% 50%, 93% 100%, 7% 100%, 0 50%);
   cursor: pointer;
   transition:
@@ -655,7 +615,7 @@ input:focus-visible {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  padding: clamp(38px, 3vw, 52px);
+  padding: clamp(30px, 2.6vw, 48px);
   background: var(--white);
   clip-path: inherit;
   display: flex;
@@ -668,10 +628,6 @@ input:focus-visible {
 .community-card:hover {
   background: var(--yellow);
   transform: translateY(-3px);
-}
-
-.community-card-copied {
-  background: var(--green);
 }
 
 .card-access {
@@ -709,7 +665,7 @@ input:focus-visible {
   font-weight: 600;
 }
 
-.card-copy {
+.card-open {
   width: fit-content;
   margin-top: auto;
   padding-bottom: 3px;
@@ -720,7 +676,7 @@ input:focus-visible {
 }
 
 .empty-state {
-  max-width: 1500px;
+  max-width: var(--maxw);
   min-height: 420px;
   margin: 0 auto;
   border: var(--line);
@@ -748,7 +704,7 @@ input:focus-visible {
 .manifesto {
   position: relative;
   overflow: hidden;
-  padding: clamp(80px, 10vw, 150px) clamp(22px, 5vw, 84px);
+  padding: var(--section-y) var(--gutter);
   background: var(--blue);
   color: var(--white);
   border-block: var(--line);
@@ -756,10 +712,11 @@ input:focus-visible {
 
 .manifesto > .section-index,
 .manifesto > h2,
+.manifesto-lede,
 .manifesto-grid {
   position: relative;
   z-index: 2;
-  max-width: 1500px;
+  max-width: var(--maxw);
   margin-inline: auto;
 }
 
@@ -769,23 +726,43 @@ input:focus-visible {
 
 .manifesto h2 em {
   display: block;
-  margin-left: clamp(30px, 12vw, 200px);
+  margin-left: clamp(20px, 7vw, 118px);
   color: var(--yellow);
   font-style: normal;
   -webkit-text-stroke: 2px var(--ink);
-  text-shadow: 6px 6px 0 var(--ink);
+  text-shadow: 5px 5px 0 var(--ink);
+}
+
+.manifesto-lede {
+  margin-top: clamp(22px, 2.4vw, 32px);
+}
+
+.manifesto-deck {
+  max-width: 780px;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.84);
+  font-size: clamp(16px, 1.4vw, 20px);
+  line-height: 1.45;
+  font-weight: 600;
+}
+
+.manifesto-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: clamp(24px, 2.6vw, 34px);
 }
 
 .manifesto-grid {
-  margin-top: 78px;
+  margin-top: clamp(36px, 4vw, 58px);
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   border: 2px solid var(--white);
 }
 
 .manifesto-grid article {
-  min-height: 270px;
-  padding: 28px;
+  min-height: 210px;
+  padding: clamp(22px, 2.2vw, 30px);
   border-right: 2px solid var(--white);
   display: flex;
   flex-direction: column;
@@ -801,8 +778,8 @@ input:focus-visible {
 }
 
 .manifesto-grid h3 {
-  margin: auto 0 14px;
-  font: 900 clamp(25px, 2.8vw, 42px)/0.95 var(--font-display);
+  margin: auto 0 12px;
+  font: 900 clamp(23px, 2.2vw, 33px)/1 var(--font-display);
   letter-spacing: -0.04em;
 }
 
@@ -817,7 +794,7 @@ input:focus-visible {
   position: relative;
   overflow: hidden;
   min-height: 540px;
-  padding: clamp(75px, 9vw, 140px) clamp(22px, 5vw, 84px);
+  padding: var(--section-y) var(--gutter);
   background: var(--ink);
   color: var(--white);
   display: grid;
@@ -837,10 +814,10 @@ input:focus-visible {
 }
 
 .list-hive p {
-  max-width: 720px;
-  margin: 30px 0 0;
+  max-width: 700px;
+  margin: 24px 0 0;
   color: rgba(255, 255, 255, 0.68);
-  font-size: clamp(17px, 1.6vw, 22px);
+  font-size: clamp(16px, 1.4vw, 20px);
   line-height: 1.4;
 }
 
@@ -891,26 +868,39 @@ input:focus-visible {
 }
 
 footer {
-  min-height: 105px;
-  padding: 24px clamp(22px, 5vw, 84px);
+  position: relative;
+  z-index: 4;
+  padding: clamp(30px, 4vw, 52px) var(--gutter);
   background: var(--yellow);
   border-top: var(--line);
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 24px;
-  font: 800 11px/1.3 var(--font-ui);
+  gap: clamp(20px, 3vw, 48px);
+}
+
+.footer-disclaimer {
+  margin: 0;
+  max-width: 760px;
+  color: rgba(17, 18, 15, 0.72);
+  font: 600 11.5px/1.5 var(--font-ui);
+}
+
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-self: end;
+  font: 800 11px/1 var(--font-ui);
   text-transform: uppercase;
   letter-spacing: 0.065em;
 }
 
-footer p {
-  margin: 0;
-  text-align: center;
-}
-
-footer > a:last-child {
-  justify-self: end;
+.footer-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding-bottom: 3px;
   border-bottom: 2px solid var(--ink);
 }
 
@@ -933,118 +923,6 @@ footer > a:last-child {
   animation: notice-in 200ms ease both;
 }
 
-.join-guide {
-  position: fixed;
-  z-index: 130;
-  right: 24px;
-  bottom: 24px;
-  width: min(440px, calc(100vw - 36px));
-  padding: 26px;
-  background: var(--white);
-  border: var(--line);
-  box-shadow: 7px 7px 0 var(--ink);
-  animation: notice-in-right 220ms ease both;
-}
-
-.join-guide-close {
-  position: absolute;
-  top: 12px;
-  right: 14px;
-  width: 34px;
-  height: 34px;
-  border: 0;
-  background: transparent;
-  cursor: pointer;
-  font: 900 26px/1 var(--font-ui);
-}
-
-.join-guide-status {
-  width: fit-content;
-  margin: 0 42px 15px 0;
-  padding: 7px 9px;
-  border: 1px solid var(--ink);
-  font: 900 9px/1 var(--font-ui);
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-}
-
-.join-guide-status-copied {
-  background: var(--green);
-}
-
-.join-guide-status-manual {
-  background: var(--pink);
-}
-
-.join-guide h2 {
-  margin: 0 0 14px;
-  font: 950 28px/0.95 var(--font-display);
-  letter-spacing: -0.04em;
-}
-
-.join-guide > code {
-  display: block;
-  overflow-wrap: anywhere;
-  padding: 11px 12px;
-  background: var(--paper);
-  border: 1px solid rgba(17, 18, 15, 0.35);
-  user-select: all;
-  font: 700 12px/1.35 ui-monospace, SFMono-Regular, Menlo, monospace;
-}
-
-.join-guide ol {
-  margin: 18px 0 0;
-  padding-left: 21px;
-  font-size: 14px;
-  line-height: 1.45;
-}
-
-.join-guide li + li {
-  margin-top: 6px;
-}
-
-.join-guide-help {
-  margin: 14px 0 0;
-  color: rgba(17, 18, 15, 0.68);
-  font-size: 13px;
-}
-
-.join-guide-actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 20px;
-}
-
-.join-guide-actions .button {
-  min-height: 42px;
-  padding-inline: 16px;
-}
-
-.button-quiet {
-  background: transparent;
-  border-color: var(--ink);
-}
-
-@keyframes bee-wing-buzz {
-  0%,
-  58%,
-  100% {
-    transform: translateY(0) scaleY(1) rotate(0);
-  }
-  62%,
-  70%,
-  78%,
-  86% {
-    transform: translateY(2px) scaleY(0.48) rotate(-9deg);
-  }
-  66%,
-  74%,
-  82%,
-  90% {
-    transform: translateY(-2px) scaleY(1.08) rotate(8deg);
-  }
-}
-
 @keyframes notice-in {
   from {
     opacity: 0;
@@ -1056,26 +934,20 @@ footer > a:last-child {
   }
 }
 
-@keyframes notice-in-right {
-  from {
-    opacity: 0;
-    transform: translateY(calc(100% + 48px));
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 @keyframes ticker {
   to {
     transform: translateX(-50%);
   }
 }
 
+/* ---------------------------------------------------------------- responsive
+   Breakpoints go wide -> narrow. Each one only changes what actually breaks at
+   that width, so the cascade stays readable.
+   -------------------------------------------------------------------------- */
+
 @media (max-width: 1180px) {
   .hero {
-    grid-template-columns: 1fr 430px;
+    grid-template-columns: minmax(0, 1fr) 400px;
   }
 
   .feature-cell {
@@ -1087,47 +959,96 @@ footer > a:last-child {
   }
 }
 
-@media (max-width: 900px) {
-  .nav-shell {
-    grid-template-columns: 1fr auto;
-  }
-
-  .nav-links {
-    display: none;
-  }
-
+@media (max-width: 980px) {
   .hero {
-    min-height: auto;
-    grid-template-columns: 1fr;
-    padding-top: 70px;
+    min-height: 0;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    gap: clamp(44px, 8vw, 72px);
   }
 
-  .hero h1 {
-    font-size: clamp(82px, 18vw, 145px);
+  .hero-copy {
+    max-width: none;
   }
 
+  /* The featured combs stop being an absolutely-positioned collage and become
+     a plain grid. Fixed-height percentage offsets waste space and fall apart
+     once the hero stacks. */
   .featured-cluster {
-    width: min(580px, 100%);
-    min-height: 480px;
-    height: 520px;
+    position: static;
     justify-self: center;
+    width: min(620px, 100%);
+    height: auto;
+    min-height: 0;
+    align-content: start;
+    transform: none;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
   }
 
-  .feature-cell {
-    width: clamp(150px, 29vw, 190px);
+  .cluster-label {
+    position: static;
+    grid-column: 1 / -1;
+    width: fit-content;
+    padding-top: 0;
+  }
+
+  .feature-cell,
+  .feature-cell-1,
+  .feature-cell-2,
+  .feature-cell-3,
+  .feature-cell-4 {
+    position: relative;
+    width: auto;
+    inset: auto;
+    aspect-ratio: 1.12;
+    padding: clamp(18px, 4vw, 28px) clamp(24px, 6vw, 34px);
+    /* Blunter points than the desktop collage: at grid widths the sharp 25%
+       corners eat into the label. */
+    clip-path: polygon(14% 0, 86% 0, 100% 50%, 86% 100%, 14% 100%, 0 50%);
+  }
+
+  .feature-name {
+    max-width: none;
   }
 
   .section-heading {
-    grid-template-columns: 1fr;
-    gap: 28px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 22px;
+  }
+
+  .section-heading p {
+    max-width: 620px;
+  }
+
+  footer {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: start;
+    gap: 22px;
+  }
+
+  .footer-links {
+    justify-self: start;
+  }
+}
+
+@media (max-width: 760px) {
+  /* Decorative combs read as stray floating lines once the CTA stacks. */
+  .cta-comb {
+    display: none;
+  }
+
+  .scroll-cue {
+    display: none;
   }
 
   .manifesto-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .manifesto-grid article {
-    min-height: 220px;
+    min-height: 0;
     border-right: 0;
     border-bottom: 2px solid var(--white);
   }
@@ -1136,171 +1057,248 @@ footer > a:last-child {
     border-bottom: 0;
   }
 
+  .manifesto-grid h3 {
+    margin-top: 16px;
+  }
+
   .list-hive {
-    grid-template-columns: 1fr;
+    min-height: 0;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 40px;
   }
 
   .list-hive > .button {
-    justify-self: start;
+    justify-self: stretch;
+  }
+
+  .results-line {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
   }
 }
 
 @media (max-width: 620px) {
-  .nav-shell {
-    height: 70px;
-    padding-inline: 18px;
-  }
-
-  .nav-cta {
-    min-height: 40px;
-    padding-inline: 13px;
-    gap: 8px;
-    font-size: 10px;
-  }
-
   .hero {
-    padding-inline: 18px;
-  }
-
-  .hero h1 {
-    margin-top: 28px;
-    font-size: clamp(70px, 23vw, 110px);
-    line-height: 0.78;
+    padding-bottom: clamp(48px, 9vw, 72px);
   }
 
   .hero h1 span {
-    margin-left: 13px;
+    margin-left: 10px;
     -webkit-text-stroke-width: 2px;
+    text-shadow: 3px 3px 0 rgba(17, 18, 15, 0.09);
   }
 
   .hero-actions {
-    align-items: flex-start;
+    align-items: stretch;
     flex-direction: column;
+    gap: 12px;
   }
 
-  .featured-cluster {
-    min-height: 390px;
-    height: 410px;
-    transform: translateX(-3%) rotate(2deg);
+  .hero-actions .button {
+    width: 100%;
   }
 
-  .cluster-label {
-    right: 0;
-  }
-
-  .feature-cell {
-    width: 145px;
-  }
-
-  .feature-cell {
-    padding: 24px 20px;
+  /* Squat cells: at 1.12 the comb was 152px tall for 62px of content. */
+  .feature-cell,
+  .feature-cell-1,
+  .feature-cell-2,
+  .feature-cell-3,
+  .feature-cell-4 {
+    aspect-ratio: 1.4;
+    padding: 16px 22px;
   }
 
   .feature-icon {
-    margin-bottom: 10px;
-    font-size: 24px;
+    margin-bottom: 8px;
+    font-size: 22px;
   }
 
   .feature-name {
+    font-size: 15px;
+  }
+
+  .feature-signal {
+    margin-top: 6px;
+  }
+
+  .buzz-ticker {
+    height: 48px;
+  }
+
+  .buzz-ticker div {
+    gap: 18px;
     font-size: 14px;
   }
 
-  .feature-cell-1 {
-    left: 0;
-  }
-
-  .feature-cell-2 {
-    left: 35%;
-  }
-
-  .feature-cell-3 {
-    left: 17.5%;
-  }
-
-  .feature-cell-4 {
-    left: 52.5%;
-  }
-
-  .scroll-cue {
-    display: none;
-  }
-
-  .directory {
-    padding-inline: 14px;
-  }
-
+  /* The search box and filters follow you down a 30-card list instead of
+     stranding you eight screens from the controls. */
   .directory-tools {
-    padding: 12px;
-    box-shadow: 5px 5px 0 var(--ink);
+    position: sticky;
+    top: 0;
+    z-index: 6;
+    padding: 10px;
+    box-shadow: 4px 4px 0 var(--ink);
   }
 
   .search-box {
-    height: 58px;
+    height: 52px;
+    gap: 10px;
+    padding: 0 12px;
+  }
+
+  .search-box > span:first-child {
+    font-size: 24px;
+  }
+
+  .search-box input {
+    font-size: 17px;
   }
 
   .search-box kbd {
     display: none;
   }
 
+  /* One swipeable row of chips rather than two stacked rows of buttons. */
   .filters {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    margin-top: 10px;
+    gap: 8px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+  }
+
+  .filters::-webkit-scrollbar {
+    display: none;
+  }
+
+  .filters button {
+    flex: 0 0 auto;
+    padding-inline: 15px;
+    font-size: 11px;
   }
 
   .results-line {
-    align-items: flex-start;
-    flex-direction: column;
+    margin-top: 26px;
   }
 
   .bento-comb {
-    grid-template-columns: 1fr;
-    grid-auto-rows: auto;
-    gap: 12px;
+    grid-template-columns: minmax(0, 1fr);
   }
 
+  /* Content-height cards. min-height: 290px left ~95px of dead space in every
+     one of them, which is three extra screens of scrolling over 32 cards. */
   .community-card {
-    min-height: 280px;
-    clip-path: polygon(6% 0, 94% 0, 100% 50%, 94% 100%, 6% 100%, 0 50%);
+    min-height: 0;
+    contain-intrinsic-size: auto 210px;
+    clip-path: polygon(4% 0, 96% 0, 100% 50%, 96% 100%, 4% 100%, 0 50%);
   }
 
   .community-card-inner {
-    padding: 32px 30px;
+    padding: 26px 22px;
+    gap: 10px;
   }
 
-  .bee-drift-field span:nth-child(n + 15) {
-    display: none;
+  .card-description {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
   }
 
-  .join-guide {
-    right: 18px;
-    bottom: 18px;
-    padding: 22px;
-  }
-
-  .manifesto,
-  .list-hive {
-    padding-inline: 18px;
+  .card-open {
+    margin-top: 4px;
   }
 
   .manifesto h2 em {
-    margin-left: 14px;
+    margin-left: 12px;
+    text-shadow: 4px 4px 0 var(--ink);
   }
 
-  footer {
-    grid-template-columns: 1fr auto;
+  .manifesto-actions .button,
+  .list-hive > .button {
+    width: 100%;
   }
 
-  footer p {
-    display: none;
+  .empty-state {
+    min-height: 300px;
+    padding: 32px 20px;
+  }
+
+  .notice {
+    bottom: 18px;
+  }
+}
+
+@media (max-width: 420px) {
+  .featured-cluster {
+    gap: 9px;
+  }
+
+  .feature-cell {
+    padding: 20px 16px;
+  }
+
+  .feature-icon {
+    margin-bottom: 10px;
+    font-size: 22px;
+  }
+
+  .feature-name {
+    font-size: 14px;
+  }
+
+  .feature-signal {
+    margin-top: 8px;
+    font-size: 8px;
+    letter-spacing: 0.09em;
   }
 
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .bee-drift-field {
-    display: none;
+/* Coarse pointers get no hover-lift: it fires on tap and looks like a glitch.
+   They get a press state instead, so a tap still acknowledges itself. */
+@media (hover: none) {
+  .button:active,
+  .filters button:active {
+    transform: translate(2px, 2px);
+    opacity: 0.9;
   }
 
+  .community-card:active,
+  .feature-cell:active {
+    transform: scale(0.985);
+  }
+
+  .community-card,
+  .feature-cell {
+    transition: transform 90ms ease;
+  }
+
+  .button:hover,
+  .community-card:hover,
+  .feature-cell:hover {
+    transform: none;
+    box-shadow: none;
+  }
+
+  .feature-cell:hover {
+    filter: none;
+    color: var(--ink);
+  }
+
+
+  .feature-cell:hover::before {
+    background: var(--yellow);
+  }
+
+  .feature-cell:hover .feature-icon {
+    color: var(--ink);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {

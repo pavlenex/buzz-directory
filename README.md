@@ -1,18 +1,89 @@
-# Buzz Hives
+# buzzdir
 
-Buzz Hives is a high-energy directory for the public communities building,
-researching, and collaborating on Buzz.
+buzzdir (buzzdir.xyz) is an open-source directory of publicly shared Buzz communities.
+It is community-run and **not affiliated with, endorsed by, or operated by Buzz
+or buzz.xyz** — every community name and relay listed here was shared publicly
+by its own admins.
+
+Want to improve it? Join the `buzzdir` community on Buzz, point your agents at
+the repo, and send a patch.
 
 ## Experience
 
-- "Find your hive" hero with free-flying SVG bees
+- "Find your hive" hero with a canvas bee swarm
 - Minimal outlined featured-community combs
 - Public community catalog from the X crawl of advertised Buzz instances
 - Search and category filters (Builders, Bitcoin, Privacy, Culture, GTM, Labs)
 - Responsive "bento comb" directory with Public / Invite access labels
-- One-click relay copying with persistent Buzz paste instructions and a manual
-  fallback when browser clipboard access is blocked
+- One-click `buzz://add-community` links that open Buzz with the community name
+  and `wss://` relay prefilled
 - "List your hive" call to action prepared for a future submission flow
+
+## The bee swarm
+
+The swarm lives in three files:
+
+- `app/BeeDrift.tsx` — a host `<div>`. It renders nothing on the server and
+  lazy-loads the engine on idle, so the swarm costs the first paint nothing.
+- `app/beeSprites.ts` — bakes an offscreen sprite atlas once at mount. Body,
+  ink outline, glow and motion-blurred wings are rasterised there rather than
+  redrawn per frame. Four wing frames per tint: three flight, one folded.
+- `app/beeField.ts` — one `<canvas>`, one `requestAnimationFrame` loop. Bees
+  live in document coordinates and are drawn through a fixed viewport-sized
+  canvas, so only the on-screen third of the swarm costs anything to draw.
+
+Two things matter if you change it.
+
+**The duty cycle is the bee.** A real bee holds a point in the air with almost
+no net translation — wings blurring, body yawing, bobbing a couple of pixels —
+then snaps to a new point in a burst of a few hundred milliseconds. Motion at
+any *constant* speed is wrong in both directions: fast reads as a hornet, slow
+reads as an ant crawling. Measured, the swarm sits around 84% hovering / 13%
+darting, median speed ~8 px/s with a p99 near 290. If you touch the springs in
+`step`, check that split still holds — hover is a stiff, nearly critically
+damped spring that parks the bee, dart is a loose underdamped one that throws
+it. Smooth continuous heading interpolation, meanwhile, is how *birds* fly, and
+it is what made the original DOM version read as birds.
+
+**Nothing per-bee may live in the DOM.** The version before this one ran 64 SVG
+elements with two `drop-shadow` filters and two wing animations each, which is
+roughly 128 non-composited repaints a frame.
+
+The swarm thins itself if frames start slipping (see the adaptive valve in
+`tick`), halves its budget on narrow screens and low-core devices, pauses on
+`visibilitychange`, and renders a single still frame under
+`prefers-reduced-motion`.
+
+## Layout conventions
+
+`--gutter` and `--section-y` in `app/globals.css` set the horizontal inset and
+vertical rhythm for every section. Use them instead of a per-section `clamp()`
+so the page edges line up. Breakpoints run wide to narrow at 1180 / 980 / 760 /
+620 / 420, and each one only changes what actually breaks at that width.
+
+There is no CSS framework. Tailwind was imported once but the markup used zero
+utility classes, so all it ever shipped was preflight; the handful of resets the
+stylesheet actually depends on now sit at the top of `globals.css`. Removing the
+import was verified pixel-identical at 1440 and 390 across the full page. If you
+add utility classes you are adding a framework back — do it deliberately.
+
+## Security notes
+
+`output: "export"` means Next's `headers()` never runs, and GitHub Pages cannot
+set response headers at all, so the Content-Security-Policy lives in a meta tag
+in `app/layout.tsx`. `script-src`/`style-src` have to allow inline because Next
+inlines its bootstrap; what the policy actually buys is a hard block on
+third-party origins plus the `base-uri` / `object-src` / `form-action` vectors.
+`frame-ancestors` is ignored in meta form — closing clickjacking properly would
+mean fronting Pages with something that can set real headers.
+
+The site loads zero third-party resources: no CDN, no analytics, no webfonts,
+no cookies, no storage. Keep it that way and the CSP stays honest.
+
+`app/page.tsx` ships `GITHUB_URL` and `BUZZDIR_RELAY` as constants. A test fails
+while either still contains `REPLACE-ME`, because `github.com/REPLACE-ME` is an
+unclaimed namespace — anyone who registers it would own the "View the source"
+link. CI runs `npm test`, so a placeholder cannot reach production.
 
 ## Local development
 
@@ -37,8 +108,9 @@ All community metadata lives in `app/communities.ts`. Add or edit one object
 there; the featured area, search, filters, and directory cards all use that
 single catalog. The typed `relay` field only accepts `wss://` targets.
 
-Selecting a card copies that relay. The join panel tells the user to open Buzz,
-click **+ Add community** in the left sidebar, and paste it into **Relay URL**.
+Selecting a card opens `buzz://add-community` and passes the encoded relay and
+community name to Buzz Desktop. Buzz validates the `wss://` target and opens its
+Add Community dialog with both fields prefilled.
 
 ## GitHub Pages
 
@@ -47,7 +119,7 @@ publishes the site whenever `main` is updated:
 
 1. Push this repository to GitHub.
 2. In **Settings → Pages**, set **Source** to **GitHub Actions**.
-3. Push to `main`, or run **Deploy Buzz Hives to GitHub Pages** manually from
+3. Push to `main`, or run **Deploy buzzdir to GitHub Pages** manually from
    the Actions tab.
 
 Project sites automatically use `/<repository-name>` as the base path.

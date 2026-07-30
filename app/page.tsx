@@ -8,12 +8,15 @@ import {
   type Community,
 } from "./communities";
 
+// TODO(pav): swap these two for the real values. A test fails while either
+// still says REPLACE-ME, because github.com/REPLACE-ME is an unclaimed
+// namespace anyone could register and point at the "View the source" button.
+const GITHUB_URL = "https://github.com/REPLACE-ME/buzz-directory";
+const BUZZDIR_NAME = "buzzdir";
+const BUZZDIR_RELAY = "wss://REPLACE-ME.example";
+
 type FeaturedCommunity = Community & {
   featured: NonNullable<Community["featured"]>;
-};
-
-type JoinGuide = Pick<Community, "name" | "relay"> & {
-  status: "copied" | "manual";
 };
 
 const featuredCommunities = communities.filter(
@@ -23,52 +26,25 @@ const featuredCommunities = communities.filter(
 const accessLabel = (community: Community) =>
   community.access === "public" ? "Public" : "Invite";
 
-async function writeToClipboard(value: string): Promise<boolean> {
-  try {
-    await navigator.clipboard.writeText(value);
-    return true;
-  } catch {
-    const previousFocus =
-      document.activeElement instanceof HTMLElement
-        ? document.activeElement
-        : null;
-    const textarea = document.createElement("textarea");
-    textarea.value = value;
-    textarea.setAttribute("readonly", "");
-    textarea.style.position = "fixed";
-    textarea.style.opacity = "0";
-    document.body.appendChild(textarea);
-    textarea.select();
+// The `wss://` template-literal type is erased at runtime, so re-check it here
+// before handing a relay to the Buzz app.
+const communityDeepLink = (community: Pick<Community, "name" | "relay">) =>
+  community.relay.startsWith("wss://")
+    ? `buzz://add-community?relay=${encodeURIComponent(community.relay)}&name=${encodeURIComponent(community.name)}`
+    : "#directory";
 
-    try {
-      return document.execCommand("copy");
-    } catch {
-      return false;
-    } finally {
-      textarea.remove();
-      previousFocus?.focus();
-    }
-  }
-}
+const buzzdirDeepLink = communityDeepLink({
+  name: BUZZDIR_NAME,
+  relay: BUZZDIR_RELAY,
+});
 
-function CommunityCard({
-  community,
-  isActive,
-  isCopying,
-  onCopy,
-}: {
-  community: Community;
-  isActive: boolean;
-  isCopying: boolean;
-  onCopy: (community: Community) => void;
-}) {
+function CommunityCard({ community }: { community: Community }) {
   return (
-    <button
-      className={`community-card ${isActive ? "community-card-copied" : ""}`}
-      type="button"
-      onClick={() => onCopy(community)}
-      aria-label={`Copy ${community.name} relay and show Buzz join instructions`}
-      title={`Copy ${community.relay}`}
+    <a
+      className="community-card"
+      href={communityDeepLink(community)}
+      aria-label={`Open ${community.name} in Buzz`}
+      title={`Open ${community.name} in Buzz`}
     >
       <span className="community-card-inner">
         <span className={`card-access card-access-${community.access}`}>
@@ -76,11 +52,11 @@ function CommunityCard({
         </span>
         <span className="card-title">{community.name}</span>
         <span className="card-description">{community.description}</span>
-        <span className="card-copy" aria-hidden="true">
-          {isCopying ? "Copying…" : isActive ? "Copied ✓" : "Copy relay"}
+        <span className="card-open" aria-hidden="true">
+          Open in Buzz ↗
         </span>
       </span>
-    </button>
+    </a>
   );
 }
 
@@ -88,8 +64,6 @@ export default function Home() {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<(typeof categories)[number]>("All");
   const [notice, setNotice] = useState("");
-  const [joinGuide, setJoinGuide] = useState<JoinGuide | null>(null);
-  const [copyingRelay, setCopyingRelay] = useState<string | null>(null);
 
   const results = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -106,47 +80,13 @@ export default function Home() {
   }, [category, query]);
 
   const showNotice = (message: string) => {
-    setJoinGuide(null);
     setNotice(message);
     window.setTimeout(() => setNotice(""), 3200);
-  };
-
-  const copyCommunityRelay = async (
-    community: Pick<Community, "name" | "relay">,
-  ) => {
-    setNotice("");
-    setCopyingRelay(community.relay);
-    const copied = await writeToClipboard(community.relay);
-    setJoinGuide({
-      name: community.name,
-      relay: community.relay,
-      status: copied ? "copied" : "manual",
-    });
-    setCopyingRelay(null);
   };
 
   return (
     <main>
       <BeeDrift />
-      <nav className="nav-shell" aria-label="Primary navigation">
-        <a className="brand" href="#top" aria-label="Buzz Hives home">
-          <span className="brand-mark">B</span>
-          <span>BUZZ HIVES</span>
-        </a>
-        <div className="nav-links">
-          <a href="#directory">Discover</a>
-          <a href="#why-buzz">Why Buzz?</a>
-        </div>
-        <button
-          className="button button-dark nav-cta"
-          type="button"
-          onClick={() =>
-            showNotice("Hive submissions are warming up. The listing flow lands next.")
-          }
-        >
-          List your hive <span aria-hidden="true">↗</span>
-        </button>
-      </nav>
 
       <section className="hero" id="top">
         <div className="hero-copy">
@@ -155,11 +95,28 @@ export default function Home() {
             <span>hive.</span>
           </h1>
           <p className="hero-deck">
-            A living directory of public communities where builders, weirdos,
-            researchers, operators, and their agents make things happen.
+            A directory of publicly shared{" "}
+            <a
+              href="https://buzz.xyz"
+              target="_blank"
+              rel="noreferrer noopener"
+            >
+              Buzz
+            </a>{" "}
+            communities. Join a community and find out why everyone is buzzing
+            about Buzz.
           </p>
           <div className="hero-actions">
-            <a className="button button-dark button-big" href="#directory">
+            <button
+              className="button button-dark button-big"
+              type="button"
+              onClick={() =>
+                showNotice("You’re on the early list. Submission flow coming next.")
+              }
+            >
+              List your hive <span aria-hidden="true">↗</span>
+            </button>
+            <a className="button button-ghost button-big" href="#directory">
               Explore all hives <span aria-hidden="true">↓</span>
             </a>
           </div>
@@ -168,31 +125,21 @@ export default function Home() {
           <div className="cluster-label">
             <span>FEATURED HIVES</span>
           </div>
-          {featuredCommunities.map((community, index) => {
-            const isActive = joinGuide?.relay === community.relay;
-            return (
-              <button
-                className={[
-                  "feature-cell",
-                  `feature-cell-${index + 1}`,
-                  isActive ? "feature-cell-copied" : "",
-                ].join(" ")}
-                key={community.name}
-                type="button"
-                onClick={() => void copyCommunityRelay(community)}
-                aria-label={`Copy ${community.name} relay and show Buzz join instructions`}
-                title={`Copy ${community.relay}`}
-              >
-                <span className="feature-icon">{community.featured.icon}</span>
-                <span className="feature-name">{community.name}</span>
-                <span className="feature-signal">
-                  {isActive
-                    ? "Copied ✓"
-                    : `${accessLabel(community)} · ${community.featured.note}`}
-                </span>
-              </button>
-            );
-          })}
+          {featuredCommunities.map((community, index) => (
+            <a
+              className={`feature-cell feature-cell-${index + 1}`}
+              href={communityDeepLink(community)}
+              key={community.name}
+              aria-label={`Open ${community.name} in Buzz`}
+              title={`Open ${community.name} in Buzz`}
+            >
+              <span className="feature-icon">{community.featured.icon}</span>
+              <span className="feature-name">{community.name}</span>
+              <span className="feature-signal">
+                {accessLabel(community)} · {community.featured.note}
+              </span>
+            </a>
+          ))}
         </div>
 
         <div className="scroll-cue" aria-hidden="true">
@@ -209,11 +156,15 @@ export default function Home() {
           <i>✦</i>
           <span>BRING YOUR AGENTS</span>
           <i>✦</i>
-          <span>MAKE SOME NOISE</span>
+          <span>FORK THE DIRECTORY</span>
           <i>✦</i>
           <span>BUILD IN PUBLIC</span>
           <i>✦</i>
           <span>FIND YOUR PEOPLE</span>
+          <i>✦</i>
+          <span>BRING YOUR AGENTS</span>
+          <i>✦</i>
+          <span>FORK THE DIRECTORY</span>
           <i>✦</i>
         </div>
       </div>
@@ -225,8 +176,8 @@ export default function Home() {
             <h2>Pick a frequency.</h2>
           </div>
           <p>
-            Every comb is a live public community on Buzz. Pick one to copy its
-            relay, then paste it into Add Community in the Buzz app.
+            Every comb is a live public community. Pick one to open Buzz with
+            its name and relay already filled in.
           </p>
         </div>
 
@@ -262,21 +213,14 @@ export default function Home() {
             Showing <strong>{results.length}</strong> hives
           </span>
           <span>
-            Sourced from public X shares · click a comb to copy its{" "}
-            <code>wss://</code> relay
+            Sourced from public X shares · click a comb to open it in Buzz
           </span>
         </div>
 
         {results.length > 0 ? (
           <div className="bento-comb">
             {results.map((community) => (
-              <CommunityCard
-                community={community}
-                isActive={joinGuide?.relay === community.relay}
-                isCopying={copyingRelay === community.relay}
-                key={community.name}
-                onCopy={(selected) => void copyCommunityRelay(selected)}
-              />
+              <CommunityCard community={community} key={community.name} />
             ))}
           </div>
         ) : (
@@ -298,27 +242,60 @@ export default function Home() {
         )}
       </section>
 
-      <section className="manifesto" id="why-buzz">
-        <span className="section-index">[ 02 — WHY BUZZ? ]</span>
+      <section className="manifesto" id="contribute">
+        <span className="section-index">[ 02 — BUILT IN THE OPEN ]</span>
         <h2>
-          Community, with
-          <em>extra hands.</em>
+          Open source,
+          <em>bring your agents.</em>
         </h2>
+        <div className="manifesto-lede">
+          <p className="manifesto-deck">
+            This directory is a community project and the whole thing is open
+            source. If a hive is missing, a relay has gone stale, or the search
+            could be smarter — join the {BUZZDIR_NAME} community on Buzz, point
+            your agents at the repo, and ship the fix with us.
+          </p>
+          <div className="manifesto-actions">
+            <a
+              className="button button-yellow button-big"
+              href={buzzdirDeepLink}
+            >
+              Join {BUZZDIR_NAME} on Buzz <span aria-hidden="true">↗</span>
+            </a>
+            <a
+              className="button button-outline-light button-big"
+              href={GITHUB_URL}
+              target="_blank"
+              rel="noreferrer noopener"
+            >
+              View the source <span aria-hidden="true">↗</span>
+            </a>
+          </div>
+        </div>
         <div className="manifesto-grid">
           <article>
             <span>01</span>
-            <h3>Humans set direction.</h3>
-            <p>People bring taste, context, accountability, and the reason to care.</p>
+            <h3>Everything is public.</h3>
+            <p>
+              The catalog, the code, and the crawl live in the open. Read it,
+              fork it, disagree with it.
+            </p>
           </article>
           <article>
             <span>02</span>
-            <h3>Agents move the work.</h3>
-            <p>Research, building, debugging, and coordination happen in the same room.</p>
+            <h3>Humans set direction.</h3>
+            <p>
+              People decide what belongs here, what a good listing looks like,
+              and what gets built next.
+            </p>
           </article>
           <article>
             <span>03</span>
-            <h3>The hive remembers.</h3>
-            <p>Public progress compounds into useful context instead of disappearing.</p>
+            <h3>Agents move the work.</h3>
+            <p>
+              Crawling, cleaning, checking relays, opening patches — bring
+              yours into {BUZZDIR_NAME}.
+            </p>
           </article>
         </div>
       </section>
@@ -351,71 +328,24 @@ export default function Home() {
       </section>
 
       <footer>
-        <a className="brand brand-invert" href="#top">
-          <span className="brand-mark">B</span>
-          <span>BUZZ HIVES</span>
-        </a>
-        <p>Built for the public communities making Buzz buzz.</p>
-        <a href="#top">BACK TO TOP ↑</a>
+        <p className="footer-disclaimer">
+          buzzdir is an independent, open-source, community-run directory. Not
+          affiliated with, endorsed by, or operated by buzz.xyz. Every community
+          listed was shared publicly by its own admins.
+        </p>
+        <div className="footer-links">
+          <a href={GITHUB_URL} target="_blank" rel="noreferrer noopener">
+            GitHub ↗
+          </a>
+          <a href={buzzdirDeepLink}>Our hive on Buzz ↗</a>
+          <a href="#top">Back to top ↑</a>
+        </div>
       </footer>
 
       {notice ? (
         <div className="notice" role="status">
           {notice}
         </div>
-      ) : null}
-
-      {joinGuide ? (
-        <aside className="join-guide" aria-label="Buzz join instructions">
-          <button
-            className="join-guide-close"
-            type="button"
-            aria-label="Dismiss join instructions"
-            onClick={() => setJoinGuide(null)}
-          >
-            ×
-          </button>
-          <p
-            className={`join-guide-status join-guide-status-${joinGuide.status}`}
-            role="status"
-          >
-            {joinGuide.status === "copied"
-              ? "Relay copied to clipboard ✓"
-              : "Automatic copy was blocked"}
-          </p>
-          <h2>{joinGuide.name} is ready.</h2>
-          <code tabIndex={0}>{joinGuide.relay}</code>
-          <ol>
-            <li>Open Buzz.</li>
-            <li>
-              Click <strong>+ Add community</strong> in the left sidebar.
-            </li>
-            <li>
-              Paste into <strong>Relay URL</strong>, then continue.
-            </li>
-          </ol>
-          {joinGuide.status === "manual" ? (
-            <p className="join-guide-help">
-              Select the relay above or try copying it again.
-            </p>
-          ) : null}
-          <div className="join-guide-actions">
-            <button
-              className="button button-dark"
-              type="button"
-              onClick={() => void copyCommunityRelay(joinGuide)}
-            >
-              Copy again
-            </button>
-            <button
-              className="button button-quiet"
-              type="button"
-              onClick={() => setJoinGuide(null)}
-            >
-              Done
-            </button>
-          </div>
-        </aside>
       ) : null}
     </main>
   );
