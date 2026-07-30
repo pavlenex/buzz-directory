@@ -28,21 +28,20 @@ test("exports the Buzz public-community directory for static hosting", async () 
   assert.match(html, /card-access-invite[^>]*>Invite/);
   assert.match(
     html,
-    /<a class="community-card" href="wss:\/\/buzz\.cashu\.space"/,
-  );
-  assert.match(
-    html,
-    /href="wss:\/\/monero\.communities\.buzz\.xyz"/,
+    /<button class="community-card " type="button" aria-label="Copy Cashu relay and show Buzz join instructions" title="Copy wss:\/\/buzz\.cashu\.space"/,
   );
   assert.doesNotMatch(
     html,
-    /href="https:\/\/(?:[\w-]+\.)?communities\.buzz\.xyz"/,
+    /href="(?:wss|https):\/\/(?:[\w-]+\.)?communities\.buzz\.xyz"/,
   );
-  const renderedRelayLinks = [...html.matchAll(/href="(wss:\/\/[^"]+)"/g)].map(
+  const renderedRelayCopies = [
+    ...html.matchAll(/title="Copy (wss:\/\/[^"]+)"/g),
+  ].map(
     ([, relay]) => relay,
   );
-  assert.equal(renderedRelayLinks.length, 36);
-  assert.equal(new Set(renderedRelayLinks).size, 32);
+  assert.equal(renderedRelayCopies.length, 36);
+  assert.equal(new Set(renderedRelayCopies).size, 32);
+  assert.doesNotMatch(html, /class="notice"|class="join-guide"/);
   assert.doesNotMatch(html, /public hives buzzing now/i);
   assert.doesNotMatch(html, /sonarprivacy|SV2-Fleet|building-buzz-inside|test2/);
   assert.match(html, /og\.png/);
@@ -65,6 +64,7 @@ test("includes CSS bee drift and the GitHub Pages deployment contract", async ()
     packageJson,
     nextConfig,
     workflow,
+    readme,
   ] =
     await Promise.all([
       readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
@@ -78,32 +78,48 @@ test("includes CSS bee drift and the GitHub Pages deployment contract", async ()
         new URL("../.github/workflows/deploy-pages.yml", import.meta.url),
         "utf8",
       ),
+      readFile(new URL("../README.md", import.meta.url), "utf8"),
     ]);
 
   assert.match(page, /from "\.\/communities"/);
   assert.match(page, /Search communities/);
-  assert.match(page, /prefers-reduced-motion|aria-live/);
+  assert.match(page, /role="status"/);
   assert.match(page, /<BeeDrift \/>/);
+  assert.match(page, /navigator\.clipboard\.writeText/);
+  assert.match(page, /document\.execCommand\("copy"\)/);
+  assert.match(page, /Copy relay/);
+  assert.match(page, /\+ Add community/);
+  assert.match(page, /Paste into <strong>Relay URL/);
+  assert.match(page, /Automatic copy was blocked/);
+  assert.match(page, /className="join-guide"/);
+  assert.doesNotMatch(page, /href=\{community\.relay\}/);
+  assert.doesNotMatch(page, /buzz:\/\/join/);
   assert.match(drift, /bee-drift-field/);
   assert.match(drift, /beeCount = 24/);
   assert.match(drift, /<svg viewBox="0 0 64 48"/);
   assert.match(drift, /drift-bee-\$\{tones/);
-  assert.match(drift, /drift-bee-\$\{index % 2 === 0 \? "right" : "left"\}/);
   assert.doesNotMatch(drift, /🐝/);
   assert.doesNotMatch(
     `${page}\n${drift}\n${styles}`,
-    /fragmentShaderSource|getContext\(["']webgl|WebGLRenderingContext|u_pointer|pointermove|requestAnimationFrame|<canvas/i,
+    /fragmentShaderSource|getContext\(["']webgl|WebGLRenderingContext|u_pointer|pointermove|<canvas/i,
   );
-  assert.match(styles, /@keyframes bee-fly-a/);
-  assert.match(styles, /@keyframes bee-fly-b/);
-  assert.match(styles, /@keyframes bee-fly-c/);
-  assert.match(styles, /@keyframes bee-wing-beat/);
-  assert.match(styles, /\.drift-bee-left svg[\s\S]*transform: scaleX\(-1\)/);
-  assert.match(styles, /\.drift-bee-left[\s\S]*animation-direction: reverse/);
-  assert.doesNotMatch(styles, /bee-wander|animation-direction: alternate/);
+  assert.match(drift, /requestAnimationFrame/);
+  assert.match(drift, /Math\.atan2/);
+  assert.match(drift, /ResizeObserver/);
+  assert.match(drift, /visibilitychange/);
+  assert.match(drift, /prefers-reduced-motion: reduce/);
+  assert.doesNotMatch(drift, /addEventListener\(["']pointer|clientX|clientY/);
+  assert.match(styles, /@keyframes bee-wing-buzz/);
+  assert.doesNotMatch(styles, /@keyframes bee-fly-|drift-bee-left|bee-route-/);
   assert.match(styles, /\.drift-bee-(?:acid|pink|blue|mint)/);
   assert.match(styles, /\.card-access-invite/);
+  assert.match(styles, /\.join-guide/);
+  assert.match(styles, /\.community-card-copied/);
   assert.match(styles, /\.bee-drift-field[\s\S]*pointer-events: none/);
+  assert.match(page, /notice \? \([\s\S]*className="notice" role="status"/);
+  assert.doesNotMatch(page, /notice-visible/);
+  assert.match(styles, /@keyframes notice-in/);
+  assert.doesNotMatch(styles, /\.notice-visible/);
   assert.match(styles, /grid-template-columns: repeat\(3/);
   assert.match(styles, /--comb-pattern:/);
   assert.doesNotMatch(`${page}\n${styles}`, /empty-cell/);
@@ -123,6 +139,9 @@ test("includes CSS bee drift and the GitHub Pages deployment contract", async ()
   assert.match(nextConfig, /basePath: pagesBasePath/);
   assert.match(workflow, /actions\/deploy-pages@v4/);
   assert.match(workflow, /path: out/);
+  assert.match(readme, /One-click relay copying/);
+  assert.match(readme, /\+ Add community/);
+  assert.doesNotMatch(readme, /Direct `wss:\/\/` community links/);
   assert.doesNotMatch(layout, /Starter Project|codex-preview|_sites-preview/);
   assert.doesNotMatch(
     packageJson,

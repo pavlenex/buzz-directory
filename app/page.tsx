@@ -12,6 +12,10 @@ type FeaturedCommunity = Community & {
   featured: NonNullable<Community["featured"]>;
 };
 
+type JoinGuide = Pick<Community, "name" | "relay"> & {
+  status: "copied" | "manual";
+};
+
 const featuredCommunities = communities.filter(
   (community): community is FeaturedCommunity => community.featured !== undefined,
 );
@@ -19,22 +23,64 @@ const featuredCommunities = communities.filter(
 const accessLabel = (community: Community) =>
   community.access === "public" ? "Public" : "Invite";
 
-function CommunityCard({ community }: { community: Community }) {
+async function writeToClipboard(value: string): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(value);
+    return true;
+  } catch {
+    const previousFocus =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
+    const textarea = document.createElement("textarea");
+    textarea.value = value;
+    textarea.setAttribute("readonly", "");
+    textarea.style.position = "fixed";
+    textarea.style.opacity = "0";
+    document.body.appendChild(textarea);
+    textarea.select();
+
+    try {
+      return document.execCommand("copy");
+    } catch {
+      return false;
+    } finally {
+      textarea.remove();
+      previousFocus?.focus();
+    }
+  }
+}
+
+function CommunityCard({
+  community,
+  isActive,
+  isCopying,
+  onCopy,
+}: {
+  community: Community;
+  isActive: boolean;
+  isCopying: boolean;
+  onCopy: (community: Community) => void;
+}) {
   return (
-    <a
-      className="community-card"
-      href={community.relay}
-      aria-label={`Open ${community.name} in Buzz`}
-      title={community.relay}
+    <button
+      className={`community-card ${isActive ? "community-card-copied" : ""}`}
+      type="button"
+      onClick={() => onCopy(community)}
+      aria-label={`Copy ${community.name} relay and show Buzz join instructions`}
+      title={`Copy ${community.relay}`}
     >
-      <div className="community-card-inner">
+      <span className="community-card-inner">
         <span className={`card-access card-access-${community.access}`}>
           {accessLabel(community)}
         </span>
-        <h3>{community.name}</h3>
-        <p>{community.description}</p>
-      </div>
-    </a>
+        <span className="card-title">{community.name}</span>
+        <span className="card-description">{community.description}</span>
+        <span className="card-copy" aria-hidden="true">
+          {isCopying ? "Copying…" : isActive ? "Copied ✓" : "Copy relay"}
+        </span>
+      </span>
+    </button>
   );
 }
 
@@ -42,6 +88,8 @@ export default function Home() {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<(typeof categories)[number]>("All");
   const [notice, setNotice] = useState("");
+  const [joinGuide, setJoinGuide] = useState<JoinGuide | null>(null);
+  const [copyingRelay, setCopyingRelay] = useState<string | null>(null);
 
   const results = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -58,8 +106,23 @@ export default function Home() {
   }, [category, query]);
 
   const showNotice = (message: string) => {
+    setJoinGuide(null);
     setNotice(message);
     window.setTimeout(() => setNotice(""), 3200);
+  };
+
+  const copyCommunityRelay = async (
+    community: Pick<Community, "name" | "relay">,
+  ) => {
+    setNotice("");
+    setCopyingRelay(community.relay);
+    const copied = await writeToClipboard(community.relay);
+    setJoinGuide({
+      name: community.name,
+      relay: community.relay,
+      status: copied ? "copied" : "manual",
+    });
+    setCopyingRelay(null);
   };
 
   return (
@@ -105,20 +168,31 @@ export default function Home() {
           <div className="cluster-label">
             <span>FEATURED HIVES</span>
           </div>
-          {featuredCommunities.map((community, index) => (
-            <a
-              className={`feature-cell feature-cell-${index + 1}`}
-              key={community.name}
-              href={community.relay}
-              aria-label={`Open ${community.name} in Buzz`}
-            >
-              <span className="feature-icon">{community.featured.icon}</span>
-              <span className="feature-name">{community.name}</span>
-              <span className="feature-signal">
-                {accessLabel(community)} · {community.featured.note}
-              </span>
-            </a>
-          ))}
+          {featuredCommunities.map((community, index) => {
+            const isActive = joinGuide?.relay === community.relay;
+            return (
+              <button
+                className={[
+                  "feature-cell",
+                  `feature-cell-${index + 1}`,
+                  isActive ? "feature-cell-copied" : "",
+                ].join(" ")}
+                key={community.name}
+                type="button"
+                onClick={() => void copyCommunityRelay(community)}
+                aria-label={`Copy ${community.name} relay and show Buzz join instructions`}
+                title={`Copy ${community.relay}`}
+              >
+                <span className="feature-icon">{community.featured.icon}</span>
+                <span className="feature-name">{community.name}</span>
+                <span className="feature-signal">
+                  {isActive
+                    ? "Copied ✓"
+                    : `${accessLabel(community)} · ${community.featured.note}`}
+                </span>
+              </button>
+            );
+          })}
         </div>
 
         <div className="scroll-cue" aria-hidden="true">
@@ -151,8 +225,8 @@ export default function Home() {
             <h2>Pick a frequency.</h2>
           </div>
           <p>
-            Every comb is a live public community on Buzz. Filter the noise,
-            follow the signal, and find the room that needs your kind of energy.
+            Every comb is a live public community on Buzz. Pick one to copy its
+            relay, then paste it into Add Community in the Buzz app.
           </p>
         </div>
 
@@ -188,15 +262,21 @@ export default function Home() {
             Showing <strong>{results.length}</strong> hives
           </span>
           <span>
-            Sourced from public X shares · cards open{" "}
-            <code>wss://</code> directly in Buzz
+            Sourced from public X shares · click a comb to copy its{" "}
+            <code>wss://</code> relay
           </span>
         </div>
 
         {results.length > 0 ? (
           <div className="bento-comb">
             {results.map((community) => (
-              <CommunityCard community={community} key={community.name} />
+              <CommunityCard
+                community={community}
+                isActive={joinGuide?.relay === community.relay}
+                isCopying={copyingRelay === community.relay}
+                key={community.name}
+                onCopy={(selected) => void copyCommunityRelay(selected)}
+              />
             ))}
           </div>
         ) : (
@@ -279,9 +359,64 @@ export default function Home() {
         <a href="#top">BACK TO TOP ↑</a>
       </footer>
 
-      <div className={`notice ${notice ? "notice-visible" : ""}`} aria-live="polite">
-        {notice}
-      </div>
+      {notice ? (
+        <div className="notice" role="status">
+          {notice}
+        </div>
+      ) : null}
+
+      {joinGuide ? (
+        <aside className="join-guide" aria-label="Buzz join instructions">
+          <button
+            className="join-guide-close"
+            type="button"
+            aria-label="Dismiss join instructions"
+            onClick={() => setJoinGuide(null)}
+          >
+            ×
+          </button>
+          <p
+            className={`join-guide-status join-guide-status-${joinGuide.status}`}
+            role="status"
+          >
+            {joinGuide.status === "copied"
+              ? "Relay copied to clipboard ✓"
+              : "Automatic copy was blocked"}
+          </p>
+          <h2>{joinGuide.name} is ready.</h2>
+          <code tabIndex={0}>{joinGuide.relay}</code>
+          <ol>
+            <li>Open Buzz.</li>
+            <li>
+              Click <strong>+ Add community</strong> in the left sidebar.
+            </li>
+            <li>
+              Paste into <strong>Relay URL</strong>, then continue.
+            </li>
+          </ol>
+          {joinGuide.status === "manual" ? (
+            <p className="join-guide-help">
+              Select the relay above or try copying it again.
+            </p>
+          ) : null}
+          <div className="join-guide-actions">
+            <button
+              className="button button-dark"
+              type="button"
+              onClick={() => void copyCommunityRelay(joinGuide)}
+            >
+              Copy again
+            </button>
+            <button
+              className="button button-quiet"
+              type="button"
+              onClick={() => setJoinGuide(null)}
+            >
+              Done
+            </button>
+          </div>
+        </aside>
+      ) : null}
     </main>
   );
 }
