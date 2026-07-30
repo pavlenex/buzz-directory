@@ -48,6 +48,7 @@ export type Community = {
  * - RESEARCH/BUZZ_COMMUNITIES_INVITE_URLS_X_CRAWL_2026_07_30.md
  * - Owner add: meshllm, presidiobitcoin (relay only)
  * - Direct X add: virtualoranges (relay only)
+ * - GitHub issue #5: Los Angeles Buzzers (relay only)
  */
 export const communities: readonly Community[] = [
   // --- Featured (hero order; not re-sorted with the directory grid) ---
@@ -227,6 +228,13 @@ export const communities: readonly Community[] = [
       "Lightning Dev Kit community for developers building on Bitcoin and Lightning.",
     category: "Bitcoin",
     relay: "wss://lightningdevkit.communities.buzz.xyz",
+  },
+  {
+    name: "Los Angeles Buzzers",
+    description:
+      "Founders, builders, and AI enthusiasts gathering in Los Angeles.",
+    category: "Builders",
+    relay: "wss://la.communities.buzz.xyz",
   },
   {
     name: "malibu",

@@ -52,6 +52,7 @@ test("exports the buzzdir catalog for static hosting", async () => {
     "bitcoiners",
     "vibecoding",
     "Virtual Oranges",
+    "Los Angeles Buzzers",
   ]) {
     assert.match(html, new RegExp(name));
   }
@@ -73,7 +74,7 @@ test("exports the buzzdir catalog for static hosting", async () => {
       /<a class="community-card" href="([^"]+)"[\s\S]*?<span class="card-access card-access-(public|invite)">/g,
     ),
   ];
-  assert.equal(cards.length, 37);
+  assert.equal(cards.length, 38);
   for (const [, href, access] of cards) {
     if (access === "public") {
       assert.match(href, /^https:\/\//);
@@ -135,6 +136,13 @@ test("exports the buzzdir catalog for static hosting", async () => {
       ({ name, relay }) =>
         name === "LDK" &&
         relay === "wss://lightningdevkit.communities.buzz.xyz",
+    ),
+  );
+  assert.ok(
+    addLinks.some(
+      ({ name, relay }) =>
+        name === "Los Angeles Buzzers" &&
+        relay === "wss://la.communities.buzz.xyz",
     ),
   );
 
@@ -412,8 +420,8 @@ test("catalog and deployment contract", async () => {
   const publicUrls = [
     ...communityData.matchAll(/publicUrl:\s*\n?\s*"(https:\/\/[^"]+)"/g),
   ].map(([, url]) => url);
-  assert.equal(relays.length, 37);
-  assert.equal(new Set(relays).size, 37);
+  assert.equal(relays.length, 38);
+  assert.equal(new Set(relays).size, 38);
   assert.equal(inviteUrls.length, 16);
   assert.equal(new Set(inviteUrls).size, 16);
   assert.ok(inviteUrls.every((url) => url.includes("/invite/")));
@@ -423,6 +431,10 @@ test("catalog and deployment contract", async () => {
   assert.match(
     communityData,
     /name: "Virtual Oranges"[\s\S]{0,320}relay: "wss:\/\/virtualoranges\.communities\.buzz\.xyz"/,
+  );
+  assert.match(
+    communityData,
+    /name: "Los Angeles Buzzers"[\s\S]{0,320}relay: "wss:\/\/la\.communities\.buzz\.xyz"/,
   );
   // inviteUrl itself is the source of truth. There is no duplicate access flag.
   assert.doesNotMatch(communityData, /CommunityAccess|access:/);
