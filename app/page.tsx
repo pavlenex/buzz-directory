@@ -67,16 +67,22 @@ export default function Home() {
 
   const results = useMemo(() => {
     const normalized = query.trim().toLowerCase();
-    return communities.filter((community) => {
-      const matchesCategory =
-        category === "All" || community.category === category;
-      const matchesQuery =
-        !normalized ||
-        `${community.name} ${community.description} ${community.category} ${community.relay}`
-          .toLowerCase()
-          .includes(normalized);
-      return matchesCategory && matchesQuery;
-    });
+    return communities
+      .filter((community) => {
+        const matchesCategory =
+          category === "All" || community.category === category;
+        const matchesQuery =
+          !normalized ||
+          `${community.name} ${community.description} ${community.category} ${community.relay}`
+            .toLowerCase()
+            .includes(normalized);
+        return matchesCategory && matchesQuery;
+      })
+      // Directory grid is always A–Z; featured hero order is independent.
+      .slice()
+      .sort((a, b) =>
+        a.name.localeCompare(b.name, "en", { sensitivity: "base" }),
+      );
   }, [category, query]);
 
   const showNotice = (message: string) => {
