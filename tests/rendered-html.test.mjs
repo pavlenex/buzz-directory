@@ -232,6 +232,14 @@ test("catalog and deployment contract", async () => {
     "Set GITHUB_URL and BUZZDIR_RELAY in app/page.tsx before deploying — " +
       "github.com/REPLACE-ME is an unclaimed namespace anyone could register.",
   );
+  assert.match(
+    page,
+    /const GITHUB_URL = "https:\/\/github\.com\/pavlenex\/buzz-directory"/,
+  );
+  assert.match(
+    page,
+    /const BUZZDIR_RELAY = "wss:\/\/flint\.communities\.buzz\.xyz"/,
+  );
 
   const relays = [...communityData.matchAll(/relay: "(wss:\/\/[^"]+)"/g)].map(
     ([, relay]) => relay,
@@ -275,9 +283,12 @@ test("catalog and deployment contract", async () => {
 
   assert.match(nextConfig, /output: "export"/);
   assert.match(nextConfig, /basePath: pagesBasePath/);
+  assert.match(nextConfig, /hasConfiguredBasePath/);
 
   assert.match(workflow, /actions\/deploy-pages@v4/);
   assert.match(workflow, /path: out/);
+  assert.match(workflow, /steps\.pages\.outputs\.base_path/);
+  assert.doesNotMatch(workflow, /vars\.PAGES_BASE_PATH/);
   assert.doesNotMatch(workflow, /pull_request_target/);
 
   assert.match(readme, /One-click `buzz:\/\/add-community` links/);
