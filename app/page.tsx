@@ -1,6 +1,12 @@
 "use client";
 
-import { useMemo, useState, type FormEvent } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type FormEvent,
+} from "react";
 import { BeeDrift } from "./BeeDrift";
 import {
   categories,
@@ -10,10 +16,9 @@ import {
 
 const GITHUB_URL = "https://github.com/pavlenex/buzz-directory";
 const BUZZDIR_NAME = "buzzdir";
-const BUZZDIR_RELAY = "wss://flint.communities.buzz.xyz";
 const LISTING_DESCRIPTION_LIMIT = 140;
 
-type ListingAccess = "empty" | "public" | "private" | "invalid";
+type ListingAccess = "empty" | "public" | "invite" | "web" | "invalid";
 
 type FeaturedCommunity = Community & {
   featured: NonNullable<Community["featured"]>;
@@ -23,20 +28,46 @@ const featuredCommunities = communities.filter(
   (community): community is FeaturedCommunity => community.featured !== undefined,
 );
 
+const communityPublicUrl = (
+  community: Pick<Community, "inviteUrl" | "publicUrl">,
+) => community.inviteUrl ?? community.publicUrl;
+
+const communityAccess = (
+  community: Pick<Community, "inviteUrl" | "publicUrl">,
+) => (communityPublicUrl(community) ? "public" : "invite");
+
 const accessLabel = (community: Community) =>
-  community.access === "public" ? "Public" : "Invite";
+  communityAccess(community) === "public" ? "Public" : "Invite";
 
-// The `wss://` template-literal type is erased at runtime, so re-check it here
-// before handing a relay to the Buzz app.
-const communityDeepLink = (community: Pick<Community, "name" | "relay">) =>
-  community.relay.startsWith("wss://")
-    ? `buzz://add-community?relay=${encodeURIComponent(community.relay)}&name=${encodeURIComponent(community.name)}`
-    : "#directory";
+const communityOpenLabel = (community: Community) =>
+  community.inviteUrl
+    ? `Open ${community.name} invite`
+    : community.publicUrl
+      ? `Open ${community.name}`
+      : `Open ${community.name} in Buzz`;
 
-const buzzdirDeepLink = communityDeepLink({
-  name: BUZZDIR_NAME,
-  relay: BUZZDIR_RELAY,
-});
+// Shared invites must go through their HTTPS landing page. That page collects
+// any required join-policy acceptance and gives Buzz a policy receipt; a raw
+// buzz://join assembled here would fail with `join_policy_required`.
+// Invite-required entries can prefill Buzz's Add Community flow, but the user
+// still needs an admin invitation before the relay accepts them.
+const communityDeepLink = (
+  community: Pick<
+    Community,
+    "name" | "relay" | "inviteUrl" | "publicUrl"
+  >,
+) => {
+  if (!community.relay.startsWith("wss://")) return "#directory";
+
+  const publicUrl = communityPublicUrl(community);
+  if (publicUrl) return publicUrl;
+
+  return `buzz://add-community?relay=${encodeURIComponent(community.relay)}&name=${encodeURIComponent(community.name)}`;
+};
+
+const buzzdirDeepLink =
+  communities.find((community) => community.name === BUZZDIR_NAME)?.inviteUrl ??
+  "#directory";
 
 const classifyListingUrl = (value: string): ListingAccess => {
   const normalized = value.trim();
@@ -44,12 +75,15 @@ const classifyListingUrl = (value: string): ListingAccess => {
 
   try {
     const parsed = new URL(normalized);
-    const hasInvitePath = parsed.pathname
-      .toLowerCase()
-      .split("/")
-      .includes("invite");
-    if (hasInvitePath) return "public";
-    if (parsed.protocol === "wss:") return "private";
+    if (parsed.protocol === "wss:") return "invite";
+    if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+      const hasInvitePath = parsed.pathname
+        .toLowerCase()
+        .split("/")
+        .includes("invite");
+      if (hasInvitePath) return "public";
+      return "web";
+    }
   } catch {
     return "invalid";
   }
@@ -57,20 +91,25 @@ const classifyListingUrl = (value: string): ListingAccess => {
   return "invalid";
 };
 
-const listingAccessLabel = (access: ListingAccess) =>
-  access === "public" ? "Public" : "Private / invite-only";
+const listingAccessLabel = (access: ListingAccess) => {
+  if (access === "public") return "Public";
+  if (access === "web") return "Web link / redirect, review required";
+  return "Invite required";
+};
 
 function CommunityCard({ community }: { community: Community }) {
   return (
     <a
       className="community-card"
       href={communityDeepLink(community)}
-      aria-label={`Open ${community.name} in Buzz`}
-      title={`Open ${community.name} in Buzz`}
+      aria-label={communityOpenLabel(community)}
+      title={communityOpenLabel(community)}
     >
       <span className="community-card-inner">
         <span className="card-meta">
-          <span className={`card-access card-access-${community.access}`}>
+          <span
+            className={`card-access card-access-${communityAccess(community)}`}
+          >
             {accessLabel(community)}
           </span>
           <span className="card-category">{community.category}</span>
@@ -78,7 +117,11 @@ function CommunityCard({ community }: { community: Community }) {
         <span className="card-title">{community.name}</span>
         <span className="card-description">{community.description}</span>
         <span className="card-open" aria-hidden="true">
-          Open in Buzz ↗
+          {community.inviteUrl
+            ? "Open invite ↗"
+            : community.publicUrl
+              ? "Open community ↗"
+              : "Open in Buzz ↗"}
         </span>
       </span>
     </a>
@@ -88,16 +131,26 @@ function CommunityCard({ community }: { community: Community }) {
 export default function Home() {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<(typeof categories)[number]>("All");
-  const [notice, setNotice] = useState("");
+  const [listingOpen, setListingOpen] = useState(false);
+  const [listingTab, setListingTab] = useState<"github" | "buzz">("github");
   const [listingName, setListingName] = useState("");
   const [listingUrl, setListingUrl] = useState("");
   const [listingDescription, setListingDescription] = useState("");
   const [listingError, setListingError] = useState("");
+  const listingDialogRef = useRef<HTMLDialogElement>(null);
 
   const listingAccess = useMemo(
     () => classifyListingUrl(listingUrl),
     [listingUrl],
   );
+
+  useEffect(() => {
+    const dialog = listingDialogRef.current;
+    if (!dialog) return;
+
+    if (listingOpen && !dialog.open) dialog.showModal();
+    if (!listingOpen && dialog.open) dialog.close();
+  }, [listingOpen]);
 
   const results = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -107,7 +160,7 @@ export default function Home() {
           category === "All" || community.category === category;
         const matchesQuery =
           !normalized ||
-          `${community.name} ${community.description} ${community.category} ${community.relay}`
+          `${community.name} ${community.description} ${community.category} ${community.relay} ${community.publicUrl ?? ""}`
             .toLowerCase()
             .includes(normalized);
         return matchesCategory && matchesQuery;
@@ -118,21 +171,6 @@ export default function Home() {
         a.name.localeCompare(b.name, "en", { sensitivity: "base" }),
       );
   }, [category, query]);
-
-  const showNotice = (message: string) => {
-    setNotice(message);
-    window.setTimeout(() => setNotice(""), 3200);
-  };
-
-  const listingSummary = () => {
-    const access = listingAccessLabel(listingAccess);
-    return [
-      `Community: ${listingName.trim()}`,
-      `Link: ${listingUrl.trim()}`,
-      `Visibility: ${access}`,
-      `Description: ${listingDescription.trim()}`,
-    ].join("\n");
-  };
 
   const listingIssueUrl = () => {
     const issueUrl = new URL(`${GITHUB_URL}/issues/new`);
@@ -147,7 +185,7 @@ export default function Home() {
         "",
         `**Name:** ${listingName.trim()}`,
         `**Community URL:** ${listingUrl.trim()}`,
-        `**Visibility:** ${listingAccessLabel(listingAccess)}`,
+        `**Access:** ${listingAccessLabel(listingAccess)}`,
         "",
         "### Short description",
         listingDescription.trim(),
@@ -164,42 +202,20 @@ export default function Home() {
 
     if (listingAccess === "empty" || listingAccess === "invalid") {
       setListingError(
-        "Use a bare wss:// relay for a private hive or a link containing /invite/ for a public hive.",
+        "Use a wss:// relay, an HTTP(S) community link, or a link containing /invite/.",
       );
       return;
     }
 
     setListingError("");
-    const submitter = (event.nativeEvent as SubmitEvent)
-      .submitter as HTMLButtonElement | null;
-    const intent = submitter?.dataset.intent;
-
-    if (intent === "github") {
-      const issueUrl = listingIssueUrl();
-      const issueWindow = window.open(
-        issueUrl,
-        "_blank",
-        "noopener,noreferrer",
-      );
-      if (!issueWindow) window.location.href = issueUrl;
-      return;
-    }
-
-    if (navigator.clipboard) {
-      void navigator.clipboard
-        .writeText(listingSummary())
-        .then(() =>
-          showNotice(
-            "Listing copied. Paste it in buzzdir and vibe with the bot.",
-          ),
-        )
-        .catch(() =>
-          showNotice("Join buzzdir, then paste your community details."),
-        );
-    } else {
-      showNotice("Join buzzdir, then paste your community details.");
-    }
-    window.location.href = buzzdirDeepLink;
+    const issueUrl = listingIssueUrl();
+    setListingOpen(false);
+    const issueWindow = window.open(
+      issueUrl,
+      "_blank",
+      "noopener,noreferrer",
+    );
+    if (!issueWindow) window.location.href = issueUrl;
   };
 
   return (
@@ -225,12 +241,16 @@ export default function Home() {
             about Buzz.
           </p>
           <div className="hero-actions">
-            <a
+            <button
+              type="button"
               className="button button-dark button-big"
-              href="#list-hive"
+              onClick={() => {
+                setListingTab("github");
+                setListingOpen(true);
+              }}
             >
-              List your hive <span aria-hidden="true">↓</span>
-            </a>
+              List your hive <span aria-hidden="true">↗</span>
+            </button>
             <a className="button button-ghost button-big" href="#directory">
               Explore all hives <span aria-hidden="true">↓</span>
             </a>
@@ -245,8 +265,8 @@ export default function Home() {
               className={`feature-cell feature-cell-${index + 1}`}
               href={communityDeepLink(community)}
               key={community.name}
-              aria-label={`Open ${community.name} in Buzz`}
-              title={`Open ${community.name} in Buzz`}
+              aria-label={communityOpenLabel(community)}
+              title={communityOpenLabel(community)}
             >
               <span className="feature-icon">{community.featured.icon}</span>
               <span className="feature-name">{community.name}</span>
@@ -287,12 +307,12 @@ export default function Home() {
       <section className="directory" id="directory">
         <div className="section-heading">
           <div>
-            <span className="section-index">[ 01 — THE DIRECTORY ]</span>
+            <span className="section-index">[ 01 / THE DIRECTORY ]</span>
             <h2>Pick a frequency.</h2>
           </div>
           <p>
-            Every comb is a live public community. Pick one to open Buzz with
-            its name and relay already filled in.
+            Public hives include a link anyone can use to join. Invite hives
+            require an invitation from the relay admin.
           </p>
         </div>
 
@@ -362,7 +382,7 @@ export default function Home() {
       </section>
 
       <section className="manifesto" id="contribute">
-        <span className="section-index">[ 02 — BUILT IN THE OPEN ]</span>
+        <span className="section-index">[ 02 / BUILT IN THE OPEN ]</span>
         <h2>
           Open source,
           <em>bring your agents.</em>
@@ -371,15 +391,15 @@ export default function Home() {
           <p className="manifesto-deck">
             This directory is a community project and the whole thing is open
             source. If a hive is missing, a relay has gone stale, or the search
-            could be smarter — join the {BUZZDIR_NAME} community on Buzz, point
-            your agents at the repo, and ship the fix with us.
+            could be smarter. Open the {BUZZDIR_NAME} relay in Buzz, point your
+            agents at the repo, and ship the fix with us.
           </p>
           <div className="manifesto-actions">
             <a
               className="button button-yellow button-big"
               href={buzzdirDeepLink}
             >
-              Join {BUZZDIR_NAME} on Buzz <span aria-hidden="true">↗</span>
+              Open {BUZZDIR_NAME} in Buzz <span aria-hidden="true">↗</span>
             </a>
             <a
               className="button button-outline-light button-big"
@@ -394,7 +414,7 @@ export default function Home() {
         <div className="manifesto-grid">
           <article>
             <span>01</span>
-            <h3>Everything is public.</h3>
+            <h3>Everything is open.</h3>
             <p>
               The catalog, the code, and the crawl live in the open. Read it,
               fork it, disagree with it.
@@ -412,7 +432,7 @@ export default function Home() {
             <span>03</span>
             <h3>Agents move the work.</h3>
             <p>
-              Crawling, cleaning, checking relays, opening patches — bring
+              Crawling, cleaning, checking relays, opening patches. Bring
               yours into {BUZZDIR_NAME}.
             </p>
           </article>
@@ -431,146 +451,211 @@ export default function Home() {
           <span className="section-index">[ ADMINS, THIS ONE&apos;S FOR YOU ]</span>
           <h2 id="list-hive-heading">Bring your hive.</h2>
           <p>
-            The best way in is social: share your details in the {BUZZDIR_NAME}{" "}
-            community, meet the people maintaining the directory, and vibe with
-            the bot. Prefer GitHub? Open a prefilled issue instead.
+            Name, link, one short description. We&apos;ll detect whether it is
+            an invite link, relay URL, or web redirect.
           </p>
-          <div className="listing-route-note">
-            <strong>How visibility works</strong>
-            <span>
-              A link containing <code>/invite/</code> is listed as public. A
-              bare <code>wss://</code> relay is listed as private / invite-only.
-            </span>
-          </div>
-        </div>
-
-        <form
-          className="listing-form"
-          aria-labelledby="list-hive-heading"
-          onSubmit={handleListingSubmit}
-        >
-          <div className="listing-form-heading">
-            <span>Three fields. All required.</span>
-            <strong>Tell us about your community.</strong>
-          </div>
-
-          <label className="listing-field">
-            <span>Community name</span>
-            <input
-              type="text"
-              name="community-name"
-              value={listingName}
-              onChange={(event) => setListingName(event.target.value)}
-              maxLength={48}
-              autoComplete="organization"
-              placeholder="e.g. bitcoiners"
-              required
-            />
-          </label>
-
-          <label className="listing-field">
-            <span>Community URL</span>
-            <input
-              type="url"
-              name="community-url"
-              value={listingUrl}
-              onChange={(event) => {
-                setListingUrl(event.target.value);
-                setListingError("");
-              }}
-              maxLength={300}
-              inputMode="url"
-              autoCapitalize="none"
-              autoCorrect="off"
-              spellCheck={false}
-              placeholder="wss://… or https://…/invite/…"
-              aria-describedby="listing-url-help listing-url-status"
-              aria-invalid={listingAccess === "invalid"}
-              required
-            />
-            <small id="listing-url-help">
-              Submit the link you actually want people to use.
-            </small>
-          </label>
-
-          <div
-            className={`listing-access listing-access-${listingAccess}`}
-            id="listing-url-status"
-            role="status"
-            aria-live="polite"
-          >
-            {listingAccess === "public" ? (
-              <>
-                <strong>Public hive</strong>
-                <span>The /invite/ link lets anyone request to join.</span>
-              </>
-            ) : listingAccess === "private" ? (
-              <>
-                <strong>Private hive</strong>
-                <span>A bare wss:// relay is marked invite-only.</span>
-              </>
-            ) : listingAccess === "invalid" ? (
-              <>
-                <strong>Link not recognized</strong>
-                <span>Use a wss:// address or a link containing /invite/.</span>
-              </>
-            ) : (
-              <>
-                <strong>Public or private?</strong>
-                <span>
-                  We detect it from /invite/ versus a bare wss:// relay.
-                </span>
-              </>
-            )}
-          </div>
-
-          <label className="listing-field">
-            <span className="listing-field-label">
-              <span>Very short description</span>
-              <span aria-live="polite">
-                {listingDescription.length}/{LISTING_DESCRIPTION_LIMIT}
-              </span>
-            </span>
-            <textarea
-              name="community-description"
-              value={listingDescription}
-              onChange={(event) => setListingDescription(event.target.value)}
-              maxLength={LISTING_DESCRIPTION_LIMIT}
-              rows={3}
-              placeholder="Who is it for, and what happens there?"
-              required
-            />
-          </label>
-
-          {listingError ? (
-            <p className="listing-error" role="alert">
-              {listingError}
-            </p>
-          ) : null}
-
-          <div className="listing-actions">
+          <div className="list-hive-actions">
             <button
               className="button button-yellow button-big"
-              type="submit"
-              data-intent="buzz"
+              type="button"
+              onClick={() => {
+                setListingTab("github");
+                setListingOpen(true);
+              }}
             >
-              Copy details + join {BUZZDIR_NAME}{" "}
-              <span aria-hidden="true">↗</span>
+              List your hive <span aria-hidden="true">↗</span>
+            </button>
+            <a className="list-hive-buzz-link" href={buzzdirDeepLink}>
+              Or open {BUZZDIR_NAME} in Buzz ↗
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <dialog
+        className="listing-modal"
+        ref={listingDialogRef}
+        aria-labelledby="listing-dialog-heading"
+        onCancel={(event) => {
+          event.preventDefault();
+          setListingOpen(false);
+        }}
+        onClick={(event) => {
+          if (event.target === event.currentTarget) setListingOpen(false);
+        }}
+      >
+        <div className="listing-modal-card">
+          <button
+            className="listing-modal-close"
+            type="button"
+            aria-label="Close"
+            onClick={() => setListingOpen(false)}
+          >
+            ×
+          </button>
+          <div className="listing-modal-heading">
+            <span>Bring your hive</span>
+            <strong id="listing-dialog-heading">Add your community.</strong>
+          </div>
+
+          <div className="listing-tabs" role="tablist" aria-label="Add community">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={listingTab === "github"}
+              aria-controls="listing-github-panel"
+              onClick={() => setListingTab("github")}
+            >
+              List on GitHub
             </button>
             <button
-              className="button listing-github button-big"
-              type="submit"
-              data-intent="github"
+              type="button"
+              role="tab"
+              aria-selected={listingTab === "buzz"}
+              aria-controls="listing-buzz-panel"
+              onClick={() => setListingTab("buzz")}
             >
-              Open a GitHub issue <span aria-hidden="true">↗</span>
+              Build on Buzz
             </button>
           </div>
-          <p className="listing-submit-note">
-            Recommended: we copy your listing, open {BUZZDIR_NAME} in Buzz, and
-            you paste it into the channel.
-          </p>
-        </form>
-      </section>
+
+          {listingTab === "github" ? (
+            <form
+              className="listing-form"
+              id="listing-github-panel"
+              role="tabpanel"
+              onSubmit={handleListingSubmit}
+            >
+              <p className="listing-form-note">
+                Three required fields. We&apos;ll open a prefilled issue for
+                review.
+              </p>
+
+              <label className="listing-field">
+                <span>Community name</span>
+                <input
+                  type="text"
+                  name="community-name"
+                  value={listingName}
+                  onChange={(event) => setListingName(event.target.value)}
+                  maxLength={48}
+                  autoComplete="organization"
+                  placeholder="e.g. bitcoiners"
+                  required
+                />
+              </label>
+
+              <label className="listing-field">
+                <span>Community URL</span>
+                <input
+                  type="url"
+                  name="community-url"
+                  value={listingUrl}
+                  onChange={(event) => {
+                    setListingUrl(event.target.value);
+                    setListingError("");
+                  }}
+                  maxLength={300}
+                  inputMode="url"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  placeholder="wss://… or https://…"
+                  aria-describedby="listing-url-status"
+                  aria-invalid={listingAccess === "invalid"}
+                  required
+                />
+              </label>
+
+              <div
+                className={`listing-access listing-access-${listingAccess}`}
+                id="listing-url-status"
+                role="status"
+                aria-live="polite"
+              >
+                {listingAccess === "public" ? (
+                  <>
+                    <strong>Public</strong>
+                    <span>/invite/ link lets people join</span>
+                  </>
+                ) : listingAccess === "invite" ? (
+                  <>
+                    <strong>Invite</strong>
+                    <span>Relay requires an invitation from its admin</span>
+                  </>
+                ) : listingAccess === "web" ? (
+                  <>
+                    <strong>Web link</strong>
+                    <span>HTTP(S) redirect or community host; we&apos;ll review it</span>
+                  </>
+                ) : listingAccess === "invalid" ? (
+                  <>
+                    <strong>Invalid link</strong>
+                    <span>Use wss://, http://, or https://</span>
+                  </>
+                ) : (
+                  <>
+                    <strong>Access</strong>
+                    <span>/invite/ = public · wss:// = invite</span>
+                  </>
+                )}
+              </div>
+
+              <label className="listing-field">
+                <span className="listing-field-label">
+                  <span>Very short description</span>
+                  <span aria-live="polite">
+                    {listingDescription.length}/{LISTING_DESCRIPTION_LIMIT}
+                  </span>
+                </span>
+                <textarea
+                  name="community-description"
+                  value={listingDescription}
+                  onChange={(event) =>
+                    setListingDescription(event.target.value)
+                  }
+                  maxLength={LISTING_DESCRIPTION_LIMIT}
+                  rows={3}
+                  placeholder="Who is it for, and what happens there?"
+                  required
+                />
+              </label>
+
+              {listingError ? (
+                <p className="listing-error" role="alert">
+                  {listingError}
+                </p>
+              ) : null}
+
+              <button
+                className="button button-yellow button-big listing-submit"
+                type="submit"
+              >
+                Open prefilled GitHub issue <span aria-hidden="true">↗</span>
+              </button>
+            </form>
+          ) : (
+            <div
+              className="listing-buzz-panel"
+              id="listing-buzz-panel"
+              role="tabpanel"
+            >
+              <span aria-hidden="true">✦</span>
+              <h3>Build it with us.</h3>
+              <p>
+                Open {BUZZDIR_NAME} in Buzz to meet the maintainers and vibe
+                with the bot. The relay may ask for an admin invite.
+              </p>
+              <a
+                className="button button-yellow button-big"
+                href={buzzdirDeepLink}
+              >
+                Open {BUZZDIR_NAME} in Buzz <span aria-hidden="true">↗</span>
+              </a>
+            </div>
+          )}
+        </div>
+      </dialog>
 
       <footer>
         <p className="footer-disclaimer">
@@ -587,11 +672,6 @@ export default function Home() {
         </div>
       </footer>
 
-      {notice ? (
-        <div className="notice" role="status">
-          {notice}
-        </div>
-      ) : null}
     </main>
   );
 }

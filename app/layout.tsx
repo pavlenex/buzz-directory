@@ -13,7 +13,7 @@ const siteUrl = configuredSiteUrl.endsWith("/")
  * tag. `script-src`/`style-src` must allow inline because Next inlines its
  * bootstrap; what this actually buys is a hard block on third-party origins
  * (the site loads zero today) plus the base-uri / object-src / form-action
- * vectors. `frame-ancestors` is ignored in meta form — clickjacking can only
+ * vectors. `frame-ancestors` is ignored in meta form. Clickjacking can only
  * be closed by fronting Pages with something that sets real headers.
  *
  * Dev needs 'unsafe-eval' and blob: because React reconstructs callstacks with
@@ -40,7 +40,7 @@ const description =
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: "buzzdir — publicly shared Buzz communities",
+  title: "buzzdir: publicly shared Buzz communities",
   description,
   referrer: "strict-origin-when-cross-origin",
   alternates: { canonical: "./" },
@@ -55,7 +55,7 @@ export const metadata: Metadata = {
         url: "./og.png",
         width: 1200,
         height: 630,
-        alt: "buzzdir — publicly shared Buzz communities",
+        alt: "buzzdir: publicly shared Buzz communities",
       },
     ],
   },

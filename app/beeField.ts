@@ -247,7 +247,7 @@ export function createBeeField(host: HTMLElement): BeeField {
       viewHeight,
     );
     const area = viewWidth * docHeight;
-    let count = Math.round(clamp(area / 115_000, 30, 125));
+    let count = Math.round(clamp(area / 91_000, 37, 154));
     if (coarse.matches) count = Math.round(count * 0.38);
     const cores = navigator.hardwareConcurrency ?? 8;
     if (cores <= 4) count = Math.round(count * 0.6);

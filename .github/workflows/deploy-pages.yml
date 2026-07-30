@@ -31,7 +31,7 @@ jobs:
       - name: Configure GitHub Pages
         id: pages
         uses: actions/configure-pages@v6
-        # Do not set static_site_generator: next — it writes a CJS next.config.js
+        # Do not set static_site_generator: next. It writes a CJS next.config.js
         # that fails under package.json "type": "module" + next.config.ts.
         # basePath is handled in next.config.ts via PAGES_BASE_PATH / GITHUB_REPOSITORY.
 

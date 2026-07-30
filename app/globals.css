@@ -322,8 +322,8 @@ textarea:focus-visible {
 .featured-cluster {
   position: relative;
   justify-self: center;
-  width: min(550px, 100%);
-  aspect-ratio: 1.4434;
+  width: min(620px, 100%);
+  aspect-ratio: 1.87;
   z-index: 4;
 }
 
@@ -342,7 +342,7 @@ textarea:focus-visible {
 
 .feature-cell {
   position: absolute;
-  width: 40%;
+  width: 31%;
   aspect-ratio: 1.1547;
   container-type: inline-size;
   clip-path: var(--comb-clip);
@@ -420,17 +420,22 @@ textarea:focus-visible {
 
 .feature-cell-2 {
   top: 0;
-  left: 30%;
+  left: 23%;
 }
 
 .feature-cell-3 {
   top: 50%;
-  left: 30%;
+  left: 23%;
 }
 
 .feature-cell-4 {
   top: 25%;
-  left: 60%;
+  left: 46%;
+}
+
+.feature-cell-5 {
+  top: 50%;
+  left: 69%;
 }
 
 .feature-cell:hover .feature-icon {
@@ -862,20 +867,18 @@ textarea:focus-visible {
 .list-hive {
   position: relative;
   overflow: hidden;
-  min-height: 720px;
+  min-height: 430px;
   padding: var(--section-y) var(--gutter);
   background: var(--ink);
   color: var(--white);
-  display: grid;
-  grid-template-columns: minmax(0, 0.78fr) minmax(460px, 1.22fr);
-  align-items: start;
-  gap: clamp(48px, 6vw, 110px);
+  display: flex;
+  align-items: center;
 }
 
 .list-hive > div:not(.cta-comb) {
   position: relative;
   z-index: 2;
-  max-width: 660px;
+  max-width: 760px;
 }
 
 .list-hive h2 {
@@ -883,75 +886,132 @@ textarea:focus-visible {
 }
 
 .list-hive p {
-  max-width: 700px;
+  max-width: 580px;
   margin: 24px 0 0;
   color: rgba(255, 255, 255, 0.68);
   font-size: clamp(16px, 1.4vw, 20px);
   line-height: 1.4;
 }
 
-.listing-route-note {
+.list-hive-actions {
   margin-top: 34px;
-  padding: 20px 22px;
-  border: 2px solid rgba(247, 255, 0, 0.62);
-  display: grid;
-  gap: 8px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 18px 24px;
 }
 
-.listing-route-note strong {
-  color: var(--yellow);
-  font: 900 12px/1 var(--font-ui);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.listing-route-note span {
+.list-hive-buzz-link {
   color: rgba(255, 255, 255, 0.78);
-  font-size: 14px;
-  line-height: 1.5;
+  font: 850 12px/1.2 var(--font-ui);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-decoration: underline;
+  text-underline-offset: 5px;
 }
 
-.listing-route-note code {
-  padding: 2px 5px;
-  background: rgba(247, 255, 0, 0.14);
-  color: var(--yellow);
-  font: 800 0.92em/1 var(--font-ui);
+.listing-modal {
+  width: min(640px, calc(100vw - 32px));
+  max-width: none;
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  overflow: visible;
 }
 
-.listing-form {
+.listing-modal::backdrop {
+  background: rgba(17, 18, 15, 0.82);
+  backdrop-filter: blur(5px);
+}
+
+.listing-modal-card {
   position: relative;
-  z-index: 2;
-  width: min(760px, 100%);
-  justify-self: end;
-  padding: clamp(24px, 3vw, 42px);
+  max-height: calc(100dvh - 32px);
+  padding: 28px clamp(22px, 4vw, 36px) 32px;
   border: 2px solid var(--yellow);
   background: var(--paper);
-  box-shadow: 10px 10px 0 var(--pink);
+  box-shadow: 9px 9px 0 var(--pink);
+  overflow-y: auto;
+}
+
+.listing-modal-close {
+  position: absolute;
+  z-index: 2;
+  top: 14px;
+  right: 16px;
+  width: 40px;
+  height: 40px;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  background: var(--paper);
   color: var(--ink);
+  font: 800 26px/1 var(--font-ui);
+  cursor: pointer;
+}
+
+.listing-modal-heading {
+  padding-right: 48px;
   display: grid;
-  gap: 22px;
+  gap: 7px;
 }
 
-.listing-form button:focus-visible {
-  outline-color: var(--blue);
-}
-
-.listing-form-heading {
-  padding-bottom: 18px;
-  border-bottom: 2px solid var(--ink);
-  display: grid;
-  gap: 8px;
-}
-
-.listing-form-heading > span {
+.listing-modal-heading > span {
   font: 900 10px/1 var(--font-ui);
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
-.listing-form-heading > strong {
-  font: 950 clamp(24px, 2.5vw, 38px)/0.96 var(--font-display);
+.listing-modal-heading > strong {
+  font: 950 clamp(28px, 5vw, 42px)/0.96 var(--font-display);
   letter-spacing: -0.04em;
+}
+
+.listing-tabs {
+  margin-top: 22px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.listing-tabs button {
+  min-height: 46px;
+  border: 2px solid var(--ink);
+  background: transparent;
+  color: var(--ink);
+  font: 900 11px/1 var(--font-ui);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.listing-tabs button + button {
+  border-left: 0;
+}
+
+.listing-tabs button[aria-selected="true"] {
+  background: var(--ink);
+  color: var(--yellow);
+}
+
+.listing-form {
+  padding-top: 20px;
+  display: grid;
+  gap: 16px;
+}
+
+.listing-form button:focus-visible,
+.listing-modal button:focus-visible {
+  outline-color: var(--blue);
+}
+
+.listing-form-note {
+  margin: 0;
+  color: rgba(17, 18, 15, 0.66);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
 }
 
 .listing-field {
@@ -989,12 +1049,12 @@ textarea:focus-visible {
 }
 
 .listing-field input {
-  min-height: 54px;
+  min-height: 50px;
   padding: 0 15px;
 }
 
 .listing-field textarea {
-  min-height: 104px;
+  min-height: 88px;
   padding: 14px 15px;
   resize: vertical;
 }
@@ -1009,18 +1069,9 @@ textarea:focus-visible {
   background: #fff2f7;
 }
 
-.listing-field small {
-  color: rgba(17, 18, 15, 0.62);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0;
-  line-height: 1.35;
-  text-transform: none;
-}
-
 .listing-access {
-  min-height: 62px;
-  padding: 13px 15px;
+  min-height: 50px;
+  padding: 10px 12px;
   border: 1.5px solid var(--ink);
   display: grid;
   grid-template-columns: auto 1fr;
@@ -1048,52 +1099,68 @@ textarea:focus-visible {
   background: color-mix(in srgb, var(--green) 28%, var(--white));
 }
 
-.listing-access-private {
+.listing-access-invite {
   background: color-mix(in srgb, var(--pink) 24%, var(--white));
+}
+
+.listing-access-web {
+  background: color-mix(in srgb, var(--yellow) 38%, var(--white));
 }
 
 .listing-access-public strong {
   background: #116b36;
 }
 
-.listing-access-private strong {
+.listing-access-invite strong {
   background: #912358;
 }
 
+.listing-access-web strong {
+  background: #665f00;
+}
+
 .listing-error {
-  max-width: none !important;
-  margin: -6px 0 0 !important;
-  padding: 12px 14px;
+  margin: -2px 0 0;
+  padding: 10px 12px;
   border-left: 5px solid #c3225c;
   background: #fff2f7;
-  color: #78113a !important;
-  font-size: 13px !important;
+  color: #78113a;
+  font-size: 12px;
   font-weight: 800;
 }
 
-.listing-actions {
-  display: grid;
-  grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr);
-  gap: 12px;
-}
-
-.listing-actions .button {
+.listing-submit {
   width: 100%;
-  padding-inline: 16px;
 }
 
-.listing-github {
-  background: var(--white);
-  color: var(--ink);
+.listing-buzz-panel {
+  min-height: 330px;
+  padding: 42px 18px 10px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
-.listing-submit-note {
-  max-width: none !important;
-  margin: -8px 0 0 !important;
-  color: rgba(17, 18, 15, 0.65) !important;
-  font-size: 11px !important;
-  font-weight: 750;
-  line-height: 1.4 !important;
+.listing-buzz-panel > span {
+  color: var(--pink);
+  font-size: 48px;
+}
+
+.listing-buzz-panel h3 {
+  margin: 14px 0 0;
+  font: 950 clamp(32px, 7vw, 52px)/0.92 var(--font-display);
+  letter-spacing: -0.05em;
+}
+
+.listing-buzz-panel p {
+  max-width: 430px;
+  margin: 18px 0 26px;
+  color: rgba(17, 18, 15, 0.68);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.45;
 }
 
 .cta-comb {
@@ -1263,7 +1330,8 @@ footer {
   .feature-cell-1,
   .feature-cell-2,
   .feature-cell-3,
-  .feature-cell-4 {
+  .feature-cell-4,
+  .feature-cell-5 {
     position: relative;
     width: auto;
     inset: auto;
@@ -1287,13 +1355,6 @@ footer {
 
   .list-hive {
     min-height: 0;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 42px;
-  }
-
-  .listing-form {
-    width: min(760px, 100%);
-    justify-self: stretch;
   }
 
   footer {
@@ -1386,7 +1447,8 @@ footer {
   .feature-cell-1,
   .feature-cell-2,
   .feature-cell-3,
-  .feature-cell-4 {
+  .feature-cell-4,
+  .feature-cell-5 {
     aspect-ratio: 1.1547;
     padding: 14px clamp(20px, 7vw, 28px);
   }
@@ -1532,15 +1594,24 @@ footer {
     text-shadow: 4px 4px 0 var(--ink);
   }
 
-  .manifesto-actions .button,
-  .listing-actions .button {
+  .manifesto-actions .button {
     width: 100%;
   }
 
+  .listing-modal {
+    width: calc(100vw - 20px);
+    max-height: calc(100dvh - 20px);
+  }
+
+  .listing-modal-card {
+    max-height: calc(100dvh - 20px);
+    padding: 24px 16px 20px;
+    box-shadow: 6px 6px 0 var(--pink);
+  }
+
   .listing-form {
-    padding: 22px 18px;
-    gap: 18px;
-    box-shadow: 7px 7px 0 var(--pink);
+    padding-top: 16px;
+    gap: 14px;
   }
 
   .listing-access {
@@ -1552,8 +1623,9 @@ footer {
     width: fit-content;
   }
 
-  .listing-actions {
-    grid-template-columns: minmax(0, 1fr);
+  .listing-buzz-panel {
+    min-height: 300px;
+    padding-inline: 4px;
   }
 
   .empty-state {
