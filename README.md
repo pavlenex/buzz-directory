@@ -10,7 +10,7 @@ researching, and collaborating on Buzz.
 - Public community catalog from the X crawl of advertised Buzz instances
 - Search and category filters (Builders, Bitcoin, Privacy, Culture, GTM, Labs)
 - Responsive "bento comb" directory with Public / Invite access labels
-- Durable https host links; join via Buzz → Add Community + `wss://` relay
+- Direct `wss://` community links that open the Buzz join flow
 - "List your hive" call to action prepared for a future submission flow
 
 ## Local development
@@ -29,6 +29,12 @@ npm test
 ```
 
 The production build is a static export in `out/`.
+
+## Update the directory
+
+All community metadata lives in `app/communities.ts`. Add or edit one object
+there; the featured area, search, filters, and directory cards all use that
+single catalog. The typed `relay` field only accepts `wss://` targets.
 
 ## GitHub Pages
 

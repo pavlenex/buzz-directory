@@ -26,12 +26,22 @@ test("exports the Buzz public-community directory for static hosting", async () 
   assert.match(html, /card-access-invite[^>]*>Invite/);
   assert.match(
     html,
-    /<a class="community-card" href="https:\/\/buzz\.cashu\.space"/,
+    /<a class="community-card" href="wss:\/\/buzz\.cashu\.space"/,
   );
   assert.match(
     html,
-    /href="https:\/\/monero\.communities\.buzz\.xyz"/,
+    /href="wss:\/\/monero\.communities\.buzz\.xyz"/,
   );
+  assert.doesNotMatch(
+    html,
+    /href="https:\/\/(?:[\w-]+\.)?communities\.buzz\.xyz"/,
+  );
+  const renderedRelayLinks = [...html.matchAll(/href="(wss:\/\/[^"]+)"/g)].map(
+    ([, relay]) => relay,
+  );
+  assert.equal(renderedRelayLinks.length, 36);
+  assert.equal(new Set(renderedRelayLinks).size, 32);
+  assert.doesNotMatch(html, /public hives buzzing now/i);
   assert.doesNotMatch(html, /sonarprivacy|SV2-Fleet|building-buzz-inside|test2/);
   assert.match(html, /og\.png/);
   assert.doesNotMatch(html, /<canvas/i);
@@ -44,9 +54,19 @@ test("exports the Buzz public-community directory for static hosting", async () 
 });
 
 test("includes CSS bee drift and the GitHub Pages deployment contract", async () => {
-  const [page, drift, styles, layout, packageJson, nextConfig, workflow] =
+  const [
+    page,
+    communityData,
+    drift,
+    styles,
+    layout,
+    packageJson,
+    nextConfig,
+    workflow,
+  ] =
     await Promise.all([
       readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+      readFile(new URL("../app/communities.ts", import.meta.url), "utf8"),
       readFile(new URL("../app/BeeDrift.tsx", import.meta.url), "utf8"),
       readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
       readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
@@ -58,7 +78,7 @@ test("includes CSS bee drift and the GitHub Pages deployment contract", async ()
       ),
     ]);
 
-  assert.match(page, /const communities/);
+  assert.match(page, /from "\.\/communities"/);
   assert.match(page, /Search communities/);
   assert.match(page, /prefers-reduced-motion|aria-live/);
   assert.match(page, /<BeeDrift \/>/);
@@ -79,7 +99,17 @@ test("includes CSS bee drift and the GitHub Pages deployment contract", async ()
   assert.match(styles, /\.card-access-invite/);
   assert.match(styles, /\.bee-drift-field[\s\S]*pointer-events: none/);
   assert.match(styles, /grid-template-columns: repeat\(3/);
+  assert.match(styles, /--comb-pattern:/);
+  assert.doesNotMatch(styles, /\.hero::after|\.honeycomb-field|\.grain/);
   assert.doesNotMatch(styles, /community-card-inner::after/);
+  const relays = [...communityData.matchAll(/relay: "(wss:\/\/[^"]+)"/g)].map(
+    ([, relay]) => relay,
+  );
+  assert.equal(relays.length, 32);
+  assert.equal(new Set(relays).size, 32);
+  assert.ok(relays.every((relay) => relay.startsWith("wss://")));
+  assert.doesNotMatch(page, /replace\(\^wss|communitySource/);
+  assert.doesNotMatch(communityData, /\b(?:id|size|signal):/);
   assert.match(layout, /Find your hive/);
   assert.match(layout, /\.\/og\.png/);
   assert.match(nextConfig, /output: "export"/);
