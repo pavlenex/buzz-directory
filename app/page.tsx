@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { BeeDrift } from "./BeeDrift";
 
 type Community = {
@@ -290,11 +290,12 @@ const categories = [
 ] as const;
 
 const featured = communities.filter((community) => community.featured);
+const communitySource = (community: Community) =>
+  `buzz://message?channel=${community.id}&id=${community.id}`;
 
 export default function Home() {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<(typeof categories)[number]>("All");
-  const [selected, setSelected] = useState<Community | null>(null);
   const [notice, setNotice] = useState("");
 
   const results = useMemo(() => {
@@ -311,26 +312,9 @@ export default function Home() {
     });
   }, [category, query]);
 
-  useEffect(() => {
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setSelected(null);
-    };
-    window.addEventListener("keydown", closeOnEscape);
-    return () => window.removeEventListener("keydown", closeOnEscape);
-  }, []);
-
   const showNotice = (message: string) => {
     setNotice(message);
     window.setTimeout(() => setNotice(""), 3200);
-  };
-
-  const copyHiveId = async (community: Community) => {
-    try {
-      await navigator.clipboard.writeText(community.id);
-      showNotice(`${community.name} hive ID copied.`);
-    } catch {
-      showNotice(`Hive ID: ${community.id}`);
-    }
   };
 
   return (
@@ -385,17 +369,16 @@ export default function Home() {
             <span>FEATURED HIVES</span>
           </div>
           {featured.map((community, index) => (
-            <button
+            <a
               className={`feature-cell feature-cell-${index + 1}`}
-              type="button"
               key={community.id}
-              onClick={() => setSelected(community)}
-              aria-label={`Explore ${community.name}`}
+              href={communitySource(community)}
+              aria-label={`Open ${community.name} in Buzz`}
             >
               <span className="feature-icon">{community.icon}</span>
               <span className="feature-name">{community.name}</span>
-              <span className="feature-signal">{community.signal}</span>
-            </button>
+              <span className="feature-signal">Public · open in Buzz</span>
+            </a>
           ))}
           <div className="empty-cell empty-cell-one" aria-hidden="true" />
           <div className="empty-cell empty-cell-two" aria-hidden="true" />
@@ -472,39 +455,19 @@ export default function Home() {
 
         {results.length > 0 ? (
           <div className="bento-comb">
-            {results.map((community, index) => (
-              <article
-                className={`community-card ${community.size}`}
+            {results.map((community) => (
+              <a
+                className="community-card"
+                href={communitySource(community)}
                 key={community.id}
+                aria-label={`Open ${community.name} in Buzz`}
               >
                 <div className="community-card-inner">
-                  <div className="card-topline">
-                    <span className="card-number">
-                      {String(index + 1).padStart(2, "0")}
-                    </span>
-                    <span className="card-category">{community.category}</span>
-                    <span className="card-live">
-                      <i />
-                      OPEN
-                    </span>
-                  </div>
-                  <div className="card-icon" aria-hidden="true">
-                    {community.icon}
-                  </div>
+                  <span className="card-access card-access-public">Public</span>
                   <h3>{community.name}</h3>
                   <p>{community.description}</p>
-                  <div className="card-footer">
-                    <span>#{community.signal.replaceAll(" ", "-")}</span>
-                    <button
-                      type="button"
-                      onClick={() => setSelected(community)}
-                      aria-label={`View details for ${community.name}`}
-                    >
-                      Explore <span aria-hidden="true">↗</span>
-                    </button>
-                  </div>
                 </div>
-              </article>
+              </a>
             ))}
           </div>
         ) : (
@@ -527,11 +490,6 @@ export default function Home() {
       </section>
 
       <section className="manifesto" id="why-buzz">
-        <div className="manifesto-orbit" aria-hidden="true">
-          <span>🐝</span>
-          <span>🐝</span>
-          <span>🐝</span>
-        </div>
         <span className="section-index">[ 02 — WHY BUZZ? ]</span>
         <h2>
           Community, with
@@ -591,40 +549,6 @@ export default function Home() {
         <p>Built for the public communities making Buzz buzz.</p>
         <a href="#top">BACK TO TOP ↑</a>
       </footer>
-
-      {selected ? (
-        <aside className="hive-drawer" aria-labelledby="drawer-title">
-          <button
-            className="drawer-close"
-            type="button"
-            onClick={() => setSelected(null)}
-            aria-label="Close community details"
-          >
-            ×
-          </button>
-          <span className="drawer-kicker">
-            <i />
-            PUBLIC HIVE · {selected.category}
-          </span>
-          <div className="drawer-icon" aria-hidden="true">
-            {selected.icon}
-          </div>
-          <h2 id="drawer-title">{selected.name}</h2>
-          <p>{selected.description}</p>
-          <div className="drawer-id">
-            <span>HIVE ID</span>
-            <code>{selected.id}</code>
-          </div>
-          <button
-            className="button button-yellow"
-            type="button"
-            onClick={() => copyHiveId(selected)}
-          >
-            Copy hive ID
-          </button>
-          <small>Use this ID to find the public channel in Buzz.</small>
-        </aside>
-      ) : null}
 
       <div className={`notice ${notice ? "notice-visible" : ""}`} aria-live="polite">
         {notice}
