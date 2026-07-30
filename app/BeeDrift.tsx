@@ -1,5 +1,17 @@
-const beeCount = 14;
+import type { CSSProperties } from "react";
+
+const beeCount = 24;
 const tones = ["acid", "pink", "blue", "mint"] as const;
+const routes = ["a", "b", "c"] as const;
+
+function beeStyle(index: number): CSSProperties {
+  return {
+    top: `${2 + ((index * 37) % 96)}%`,
+    width: `${38 + ((index * 13) % 26)}px`,
+    animationDelay: `${-((index * 7) % 29)}s`,
+    animationDuration: `${17 + ((index * 5) % 13)}s`,
+  };
+}
 
 function BeeArtwork() {
   return (
@@ -21,8 +33,14 @@ export function BeeDrift() {
     <div className="bee-drift-field" aria-hidden="true">
       {Array.from({ length: beeCount }, (_, index) => (
         <span
-          className={`drift-bee drift-bee-${tones[index % tones.length]}`}
+          className={[
+            "drift-bee",
+            `drift-bee-${tones[index % tones.length]}`,
+            `drift-bee-${index % 2 === 0 ? "right" : "left"}`,
+            `bee-route-${routes[index % routes.length]}`,
+          ].join(" ")}
           key={index}
+          style={beeStyle(index)}
         >
           <BeeArtwork />
         </span>

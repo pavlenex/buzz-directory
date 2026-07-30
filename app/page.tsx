@@ -119,8 +119,6 @@ export default function Home() {
               </span>
             </a>
           ))}
-          <div className="empty-cell empty-cell-one" aria-hidden="true" />
-          <div className="empty-cell empty-cell-two" aria-hidden="true" />
         </div>
 
         <div className="scroll-cue" aria-hidden="true">

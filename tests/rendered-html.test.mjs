@@ -22,6 +22,8 @@ test("exports the Buzz public-community directory for static hosting", async () 
   assert.match(html, /bento-comb/);
   assert.match(html, /bee-drift-field/);
   assert.match(html, /drift-bee-pink/);
+  assert.equal([...html.matchAll(/class="drift-bee /g)].length, 24);
+  assert.doesNotMatch(html, /empty-cell/);
   assert.match(html, /card-access-public[^>]*>Public/);
   assert.match(html, /card-access-invite[^>]*>Invite/);
   assert.match(
@@ -83,23 +85,28 @@ test("includes CSS bee drift and the GitHub Pages deployment contract", async ()
   assert.match(page, /prefers-reduced-motion|aria-live/);
   assert.match(page, /<BeeDrift \/>/);
   assert.match(drift, /bee-drift-field/);
-  assert.match(drift, /beeCount = 14/);
+  assert.match(drift, /beeCount = 24/);
   assert.match(drift, /<svg viewBox="0 0 64 48"/);
   assert.match(drift, /drift-bee-\$\{tones/);
+  assert.match(drift, /drift-bee-\$\{index % 2 === 0 \? "right" : "left"\}/);
   assert.doesNotMatch(drift, /🐝/);
   assert.doesNotMatch(
     `${page}\n${drift}\n${styles}`,
     /fragmentShaderSource|getContext\(["']webgl|WebGLRenderingContext|u_pointer|pointermove|requestAnimationFrame|<canvas/i,
   );
-  assert.match(styles, /@keyframes bee-wander-a/);
-  assert.match(styles, /@keyframes bee-wander-b/);
-  assert.match(styles, /@keyframes bee-wander-c/);
+  assert.match(styles, /@keyframes bee-fly-a/);
+  assert.match(styles, /@keyframes bee-fly-b/);
+  assert.match(styles, /@keyframes bee-fly-c/);
   assert.match(styles, /@keyframes bee-wing-beat/);
+  assert.match(styles, /\.drift-bee-left svg[\s\S]*transform: scaleX\(-1\)/);
+  assert.match(styles, /\.drift-bee-left[\s\S]*animation-direction: reverse/);
+  assert.doesNotMatch(styles, /bee-wander|animation-direction: alternate/);
   assert.match(styles, /\.drift-bee-(?:acid|pink|blue|mint)/);
   assert.match(styles, /\.card-access-invite/);
   assert.match(styles, /\.bee-drift-field[\s\S]*pointer-events: none/);
   assert.match(styles, /grid-template-columns: repeat\(3/);
   assert.match(styles, /--comb-pattern:/);
+  assert.doesNotMatch(`${page}\n${styles}`, /empty-cell/);
   assert.doesNotMatch(styles, /\.hero::after|\.honeycomb-field|\.grain/);
   assert.doesNotMatch(styles, /community-card-inner::after/);
   const relays = [...communityData.matchAll(/relay: "(wss:\/\/[^"]+)"/g)].map(
