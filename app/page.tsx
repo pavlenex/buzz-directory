@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { BeeSwarm } from "./BeeSwarm";
+import { BeeDrift } from "./BeeDrift";
 
 type Community = {
   id: string;
@@ -336,6 +336,7 @@ export default function Home() {
   return (
     <main>
       <div className="grain" aria-hidden="true" />
+      <BeeDrift />
       <nav className="nav-shell" aria-label="Primary navigation">
         <a className="brand" href="#top" aria-label="Buzz Hives home">
           <span className="brand-mark">B</span>
@@ -357,7 +358,6 @@ export default function Home() {
       </nav>
 
       <section className="hero" id="top">
-        <BeeSwarm />
         <div className="honeycomb-field honeycomb-field-one" aria-hidden="true" />
         <div className="honeycomb-field honeycomb-field-two" aria-hidden="true" />
 
@@ -425,9 +425,6 @@ export default function Home() {
       </div>
 
       <section className="directory" id="directory">
-        <span className="section-bee section-bee-one" aria-hidden="true">🐝</span>
-        <span className="section-bee section-bee-two" aria-hidden="true">🐝</span>
-        <span className="section-bee section-bee-three" aria-hidden="true">🐝</span>
         <div className="section-heading">
           <div>
             <span className="section-index">[ 01 — THE DIRECTORY ]</span>
@@ -530,8 +527,6 @@ export default function Home() {
       </section>
 
       <section className="manifesto" id="why-buzz">
-        <span className="section-bee manifesto-bee-one" aria-hidden="true">🐝</span>
-        <span className="section-bee manifesto-bee-two" aria-hidden="true">🐝</span>
         <div className="manifesto-orbit" aria-hidden="true">
           <span>🐝</span>
           <span>🐝</span>
@@ -562,8 +557,6 @@ export default function Home() {
       </section>
 
       <section className="list-hive" id="list-hive">
-        <span className="section-bee cta-bee-one" aria-hidden="true">🐝</span>
-        <span className="section-bee cta-bee-two" aria-hidden="true">🐝</span>
         <div className="cta-comb" aria-hidden="true">
           <span />
           <span />

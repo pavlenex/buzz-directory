@@ -33,6 +33,11 @@ body {
   overflow-x: hidden;
 }
 
+main {
+  position: relative;
+  isolation: isolate;
+}
+
 button,
 input {
   font: inherit;
@@ -252,94 +257,105 @@ input:focus-visible {
   text-shadow: 8px 8px 0 rgba(17, 18, 15, 0.1);
 }
 
-.bee-swarm {
+.bee-drift-field {
   position: absolute;
-  z-index: 2;
+  z-index: 3;
   inset: 0;
   overflow: hidden;
   pointer-events: none;
+  user-select: none;
 }
 
-.bee-swarm canvas {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-
-.bee-fallback {
+.bee-drift-field span {
   position: absolute;
-  inset: 0;
-  transition: transform 220ms ease-out;
-}
-
-.bee-swarm[data-ready="true"] .bee-fallback {
-  display: none;
-}
-
-.bee-fallback span {
-  position: absolute;
-  font-size: clamp(18px, 2.6vw, 38px);
+  font-size: clamp(18px, 2.2vw, 32px);
   filter: drop-shadow(3px 4px 0 rgba(17, 18, 15, 0.16));
-  animation: fallback-bee-flight 4.8s ease-in-out infinite alternate;
+  opacity: 0.84;
+  will-change: transform;
+  animation: bee-wander-a 17s ease-in-out infinite alternate;
 }
 
-.bee-fallback span:nth-child(1) {
-  top: 12%;
-  left: 8%;
+.bee-drift-field span:nth-child(1) {
+  top: 3%;
+  left: 7%;
 }
 
-.bee-fallback span:nth-child(2) {
-  top: 26%;
-  left: 43%;
-  animation-delay: -1.7s;
-}
-
-.bee-fallback span:nth-child(3) {
-  top: 8%;
-  right: 12%;
-  animation-delay: -3.1s;
-}
-
-.bee-fallback span:nth-child(4) {
-  top: 52%;
-  left: 14%;
-  animation-delay: -2.3s;
-}
-
-.bee-fallback span:nth-child(5) {
-  top: 72%;
-  left: 36%;
-  animation-delay: -4s;
-}
-
-.bee-fallback span:nth-child(6) {
-  top: 48%;
-  right: 22%;
-  animation-delay: -0.9s;
-}
-
-.bee-fallback span:nth-child(7) {
-  bottom: 8%;
+.bee-drift-field span:nth-child(2) {
+  top: 9%;
   right: 8%;
-  animation-delay: -2.8s;
+  animation: bee-wander-b 21s ease-in-out -7s infinite alternate;
 }
 
-.bee-fallback span:nth-child(8) {
-  top: 18%;
-  right: 38%;
-  animation-delay: -1.2s;
+.bee-drift-field span:nth-child(3) {
+  top: 17%;
+  left: 3%;
+  animation: bee-wander-c 19s ease-in-out -12s infinite alternate;
 }
 
-.bee-fallback span:nth-child(9) {
-  bottom: 13%;
-  left: 6%;
-  animation-delay: -3.6s;
+.bee-drift-field span:nth-child(4) {
+  top: 24%;
+  right: 13%;
+  animation-delay: -5s;
 }
 
-.bee-fallback span:nth-child(10) {
-  top: 38%;
+.bee-drift-field span:nth-child(5) {
+  top: 31%;
+  left: 11%;
+  animation: bee-wander-b 23s ease-in-out -15s infinite alternate;
+}
+
+.bee-drift-field span:nth-child(6) {
+  top: 39%;
   right: 4%;
-  animation-delay: -2s;
+  animation: bee-wander-c 16s ease-in-out -4s infinite alternate;
+}
+
+.bee-drift-field span:nth-child(7) {
+  top: 46%;
+  left: 5%;
+  animation-delay: -11s;
+}
+
+.bee-drift-field span:nth-child(8) {
+  top: 54%;
+  right: 9%;
+  animation: bee-wander-b 20s ease-in-out -3s infinite alternate;
+}
+
+.bee-drift-field span:nth-child(9) {
+  top: 62%;
+  left: 15%;
+  animation: bee-wander-c 22s ease-in-out -14s infinite alternate;
+}
+
+.bee-drift-field span:nth-child(10) {
+  top: 69%;
+  right: 16%;
+  animation-delay: -8s;
+}
+
+.bee-drift-field span:nth-child(11) {
+  top: 77%;
+  left: 4%;
+  animation: bee-wander-b 18s ease-in-out -13s infinite alternate;
+}
+
+.bee-drift-field span:nth-child(12) {
+  top: 84%;
+  right: 5%;
+  animation: bee-wander-c 24s ease-in-out -6s infinite alternate;
+}
+
+.bee-drift-field span:nth-child(13) {
+  top: 91%;
+  left: 18%;
+  animation-delay: -16s;
+}
+
+.bee-drift-field span:nth-child(14) {
+  top: 96%;
+  right: 20%;
+  animation: bee-wander-b 19s ease-in-out -9s infinite alternate;
 }
 
 .hero-deck {
@@ -847,36 +863,6 @@ input:focus-visible {
   font: 900 34px/1 var(--font-display);
 }
 
-.section-bee {
-  position: absolute;
-  z-index: 5;
-  pointer-events: none;
-  user-select: none;
-  font-size: clamp(20px, 2.5vw, 38px);
-  filter: drop-shadow(3px 4px 0 rgba(17, 18, 15, 0.16));
-  animation: section-bee-drift 5.8s ease-in-out infinite alternate;
-}
-
-.section-bee-one {
-  top: 5%;
-  right: 9%;
-  transform: rotate(17deg);
-}
-
-.section-bee-two {
-  top: 43%;
-  left: 1.4%;
-  font-size: 24px;
-  animation-delay: -1.8s;
-}
-
-.section-bee-three {
-  right: 2%;
-  bottom: 10%;
-  font-size: 20px;
-  animation-delay: -3.6s;
-}
-
 .empty-state p {
   margin: 0 0 24px;
 }
@@ -988,18 +974,6 @@ input:focus-visible {
   bottom: 22%;
 }
 
-.manifesto-bee-one {
-  top: 12%;
-  left: 4%;
-}
-
-.manifesto-bee-two {
-  right: 7%;
-  bottom: 8%;
-  font-size: 22px;
-  animation-delay: -2.4s;
-}
-
 .list-hive {
   position: relative;
   overflow: hidden;
@@ -1075,19 +1049,6 @@ input:focus-visible {
 .cta-comb span:nth-child(5) {
   right: -30px;
   top: 430px;
-}
-
-.cta-bee-one {
-  top: 13%;
-  right: 32%;
-  font-size: 26px;
-}
-
-.cta-bee-two {
-  bottom: 12%;
-  left: 7%;
-  font-size: 20px;
-  animation-delay: -3.1s;
 }
 
 footer {
@@ -1229,23 +1190,48 @@ footer > a:last-child {
   transform: translate(-50%, 0);
 }
 
-@keyframes fallback-bee-flight {
-  from {
-    transform: translate(-10px, 8px) rotate(-8deg);
+@keyframes bee-wander-a {
+  0% {
+    transform: translate3d(-18px, 12px, 0) rotate(-9deg);
   }
-  to {
-    transform: translate(18px, -14px) rotate(11deg);
+  36% {
+    transform: translate3d(62px, -42px, 0) rotate(13deg);
+  }
+  70% {
+    transform: translate3d(-34px, -78px, 0) rotate(-16deg);
+  }
+  100% {
+    transform: translate3d(74px, 18px, 0) rotate(10deg);
   }
 }
 
-@keyframes section-bee-drift {
-  from {
-    translate: -6px 6px;
-    rotate: -7deg;
+@keyframes bee-wander-b {
+  0% {
+    transform: translate3d(24px, -18px, 0) rotate(12deg);
   }
-  to {
-    translate: 14px -12px;
-    rotate: 11deg;
+  32% {
+    transform: translate3d(-72px, 38px, 0) rotate(-14deg);
+  }
+  68% {
+    transform: translate3d(38px, 82px, 0) rotate(17deg);
+  }
+  100% {
+    transform: translate3d(-55px, -26px, 0) rotate(-8deg);
+  }
+}
+
+@keyframes bee-wander-c {
+  0% {
+    transform: translate3d(-12px, -30px, 0) rotate(-6deg);
+  }
+  40% {
+    transform: translate3d(88px, 24px, 0) rotate(15deg);
+  }
+  72% {
+    transform: translate3d(22px, -68px, 0) rotate(4deg);
+  }
+  100% {
+    transform: translate3d(-64px, 44px, 0) rotate(-13deg);
   }
 }
 
@@ -1471,10 +1457,7 @@ footer > a:last-child {
     padding: 32px 30px;
   }
 
-  .section-bee-two,
-  .section-bee-three,
-  .manifesto-bee-two,
-  .cta-bee-two {
+  .bee-drift-field span:nth-child(n + 11) {
     display: none;
   }
 

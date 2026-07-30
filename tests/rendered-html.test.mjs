@@ -18,7 +18,9 @@ test("exports the Buzz public-community directory for static hosting", async () 
   assert.match(html, /SV2-Fleet/);
   assert.match(html, /List your hive/);
   assert.match(html, /bento-comb/);
+  assert.match(html, /bee-drift-field/);
   assert.match(html, /og\.png/);
+  assert.doesNotMatch(html, /<canvas/i);
   assert.doesNotMatch(html, /THE PUBLIC SQUARES OF BUZZ/i);
   assert.doesNotMatch(html, /MOVE TO CONDUCT THE SWARM/i);
   assert.doesNotMatch(html, /04\s*\/\s*28/);
@@ -26,11 +28,11 @@ test("exports the Buzz public-community directory for static hosting", async () 
   assert.doesNotMatch(html, /Your site is taking shape/);
 });
 
-test("includes the shader swarm and GitHub Pages deployment contract", async () => {
-  const [page, swarm, styles, layout, packageJson, nextConfig, workflow] =
+test("includes CSS bee drift and the GitHub Pages deployment contract", async () => {
+  const [page, drift, styles, layout, packageJson, nextConfig, workflow] =
     await Promise.all([
       readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
-      readFile(new URL("../app/BeeSwarm.tsx", import.meta.url), "utf8"),
+      readFile(new URL("../app/BeeDrift.tsx", import.meta.url), "utf8"),
       readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
       readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
       readFile(new URL("../package.json", import.meta.url), "utf8"),
@@ -44,14 +46,17 @@ test("includes the shader swarm and GitHub Pages deployment contract", async () 
   assert.match(page, /const communities/);
   assert.match(page, /Search communities/);
   assert.match(page, /prefers-reduced-motion|aria-live/);
-  assert.match(swarm, /fragmentShaderSource/);
-  assert.match(swarm, /getContext\("webgl"/);
-  assert.match(swarm, /IntersectionObserver/);
-  assert.match(swarm, /prefers-reduced-motion: reduce/);
-  assert.match(swarm, /fillMask/);
-  assert.match(swarm, /webglcontextlost/);
-  assert.doesNotMatch(swarm, /smoothstep\(0\.10,\s*-0\.04/);
-  assert.match(styles, /@keyframes fallback-bee-flight/);
+  assert.match(page, /<BeeDrift \/>/);
+  assert.match(drift, /bee-drift-field/);
+  assert.match(drift, /beeCount = 14/);
+  assert.doesNotMatch(
+    `${page}\n${drift}\n${styles}`,
+    /fragmentShaderSource|getContext\(["']webgl|WebGLRenderingContext|u_pointer|pointermove|requestAnimationFrame|<canvas/i,
+  );
+  assert.match(styles, /@keyframes bee-wander-a/);
+  assert.match(styles, /@keyframes bee-wander-b/);
+  assert.match(styles, /@keyframes bee-wander-c/);
+  assert.match(styles, /\.bee-drift-field[\s\S]*pointer-events: none/);
   assert.match(styles, /grid-template-columns: repeat\(3/);
   assert.doesNotMatch(styles, /community-card-inner::after/);
   assert.match(layout, /Find your hive/);
@@ -68,6 +73,9 @@ test("includes the shader swarm and GitHub Pages deployment contract", async () 
 
   await assert.rejects(
     access(new URL("../app/_sites-preview", templateRoot)),
+  );
+  await assert.rejects(
+    access(new URL("../app/BeeSwarm.tsx", templateRoot)),
   );
   await assert.rejects(
     access(new URL("../.openai/hosting.json", templateRoot)),
