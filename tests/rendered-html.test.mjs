@@ -285,7 +285,15 @@ test("catalog and deployment contract", async () => {
   assert.match(nextConfig, /basePath: pagesBasePath/);
   assert.match(nextConfig, /hasConfiguredBasePath/);
 
-  assert.match(workflow, /actions\/deploy-pages@v4/);
+  for (const action of [
+    "actions/checkout@v7",
+    "actions/setup-node@v7",
+    "actions/configure-pages@v6",
+    "actions/upload-pages-artifact@v5",
+    "actions/deploy-pages@v5",
+  ]) {
+    assert.match(workflow, new RegExp(action.replace("/", "\\/")));
+  }
   assert.match(workflow, /path: out/);
   assert.match(workflow, /steps\.pages\.outputs\.base_path/);
   assert.doesNotMatch(workflow, /vars\.PAGES_BASE_PATH/);
