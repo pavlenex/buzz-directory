@@ -4,33 +4,11 @@ import test from "node:test";
 
 const templateRoot = new URL("../", import.meta.url);
 
-async function render() {
-  const workerUrl = new URL("../dist/server/index.js", import.meta.url);
-  workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}`);
-  const { default: worker } = await import(workerUrl.href);
-
-  return worker.fetch(
-    new Request("http://localhost/", {
-      headers: { accept: "text/html" },
-    }),
-    {
-      ASSETS: {
-        fetch: async () => new Response("Not found", { status: 404 }),
-      },
-    },
-    {
-      waitUntil() {},
-      passThroughOnException() {},
-    },
+test("exports the Buzz public-community directory for static hosting", async () => {
+  const html = await readFile(
+    new URL("../out/index.html", import.meta.url),
+    "utf8",
   );
-}
-
-test("server-renders the Buzz public-community directory", async () => {
-  const response = await render();
-  assert.equal(response.status, 200);
-  assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
-
-  const html = await response.text();
   assert.match(html, /<title>Find your hive — Buzz public communities<\/title>/i);
   assert.match(html, /Find your/);
   assert.match(html, /hive\./);
@@ -39,25 +17,49 @@ test("server-renders the Buzz public-community directory", async () => {
   assert.match(html, /sonarprivacy/);
   assert.match(html, /SV2-Fleet/);
   assert.match(html, /List your hive/);
+  assert.match(html, /bento-comb/);
+  assert.match(html, /og\.png/);
+  assert.doesNotMatch(html, /THE PUBLIC SQUARES OF BUZZ/i);
   assert.doesNotMatch(html, /codex-preview/);
   assert.doesNotMatch(html, /Your site is taking shape/);
 });
 
-test("removes starter-only preview assets and metadata", async () => {
-  const [page, layout, packageJson] = await Promise.all([
+test("includes the shader swarm and GitHub Pages deployment contract", async () => {
+  const [page, swarm, layout, packageJson, nextConfig, workflow] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/BeeSwarm.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
     readFile(new URL("../package.json", import.meta.url), "utf8"),
+    readFile(new URL("../next.config.ts", import.meta.url), "utf8"),
+    readFile(
+      new URL("../.github/workflows/deploy-pages.yml", import.meta.url),
+      "utf8",
+    ),
   ]);
 
   assert.match(page, /const communities/);
   assert.match(page, /Search communities/);
   assert.match(page, /prefers-reduced-motion|aria-live/);
+  assert.match(swarm, /fragmentShaderSource/);
+  assert.match(swarm, /getContext\("webgl"/);
+  assert.match(swarm, /IntersectionObserver/);
+  assert.match(swarm, /prefers-reduced-motion: reduce/);
   assert.match(layout, /Find your hive/);
+  assert.match(layout, /\.\/og\.png/);
+  assert.match(nextConfig, /output: "export"/);
+  assert.match(nextConfig, /basePath: pagesBasePath/);
+  assert.match(workflow, /actions\/deploy-pages@v4/);
+  assert.match(workflow, /path: out/);
   assert.doesNotMatch(layout, /Starter Project|codex-preview|_sites-preview/);
-  assert.doesNotMatch(packageJson, /react-loading-skeleton/);
+  assert.doesNotMatch(
+    packageJson,
+    /"(?:vinext|wrangler|@cloudflare\/vite-plugin|react-loading-skeleton)"\s*:/,
+  );
 
   await assert.rejects(
     access(new URL("../app/_sites-preview", templateRoot)),
+  );
+  await assert.rejects(
+    access(new URL("../.openai/hosting.json", templateRoot)),
   );
 });

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { BeeSwarm } from "./BeeSwarm";
 
 type Community = {
   id: string;
@@ -356,29 +357,11 @@ export default function Home() {
       </nav>
 
       <section className="hero" id="top">
+        <BeeSwarm />
         <div className="honeycomb-field honeycomb-field-one" aria-hidden="true" />
         <div className="honeycomb-field honeycomb-field-two" aria-hidden="true" />
-        <div className="bee bee-one" aria-hidden="true">
-          🐝
-        </div>
-        <div className="bee bee-two" aria-hidden="true">
-          🐝
-        </div>
-        <div className="bee bee-three" aria-hidden="true">
-          🐝
-        </div>
-        <div className="bee bee-four" aria-hidden="true">
-          🐝
-        </div>
-        <div className="bee bee-five" aria-hidden="true">
-          🐝
-        </div>
 
         <div className="hero-copy">
-          <div className="eyebrow">
-            <span className="live-dot" />
-            THE PUBLIC SQUARES OF BUZZ
-          </div>
           <h1>
             Find your
             <span>hive.</span>
@@ -397,11 +380,15 @@ export default function Home() {
             </p>
           </div>
         </div>
+        <div className="swarm-hint" aria-hidden="true">
+          <span />
+          Move to conduct the swarm
+        </div>
 
         <div className="featured-cluster" aria-label="Featured communities">
           <div className="cluster-label">
-            <span>FEATURED SIGNAL</span>
-            <span aria-hidden="true">✦</span>
+            <span>FEATURED HIVES</span>
+            <span aria-hidden="true">04 / 28</span>
           </div>
           {featured.map((community, index) => (
             <button
@@ -444,14 +431,17 @@ export default function Home() {
       </div>
 
       <section className="directory" id="directory">
+        <span className="section-bee section-bee-one" aria-hidden="true">🐝</span>
+        <span className="section-bee section-bee-two" aria-hidden="true">🐝</span>
+        <span className="section-bee section-bee-three" aria-hidden="true">🐝</span>
         <div className="section-heading">
           <div>
             <span className="section-index">[ 01 — THE DIRECTORY ]</span>
             <h2>Pick a frequency.</h2>
           </div>
           <p>
-            Every card is a live public community on Buzz. Filter the noise,
-            follow the signal, and drop into a room that needs your kind of energy.
+            Every comb is a live public community on Buzz. Filter the noise,
+            follow the signal, and find the room that needs your kind of energy.
           </p>
         </div>
 
@@ -490,36 +480,38 @@ export default function Home() {
         </div>
 
         {results.length > 0 ? (
-          <div className="community-grid">
+          <div className="bento-comb">
             {results.map((community, index) => (
               <article
                 className={`community-card ${community.size}`}
                 key={community.id}
               >
-                <div className="card-topline">
-                  <span className="card-number">
-                    {String(index + 1).padStart(2, "0")}
-                  </span>
-                  <span className="card-category">{community.category}</span>
-                  <span className="card-live">
-                    <i />
-                    OPEN
-                  </span>
-                </div>
-                <div className="card-icon" aria-hidden="true">
-                  {community.icon}
-                </div>
-                <h3>{community.name}</h3>
-                <p>{community.description}</p>
-                <div className="card-footer">
-                  <span>#{community.signal.replaceAll(" ", "-")}</span>
-                  <button
-                    type="button"
-                    onClick={() => setSelected(community)}
-                    aria-label={`View details for ${community.name}`}
-                  >
-                    Explore <span aria-hidden="true">↗</span>
-                  </button>
+                <div className="community-card-inner">
+                  <div className="card-topline">
+                    <span className="card-number">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                    <span className="card-category">{community.category}</span>
+                    <span className="card-live">
+                      <i />
+                      OPEN
+                    </span>
+                  </div>
+                  <div className="card-icon" aria-hidden="true">
+                    {community.icon}
+                  </div>
+                  <h3>{community.name}</h3>
+                  <p>{community.description}</p>
+                  <div className="card-footer">
+                    <span>#{community.signal.replaceAll(" ", "-")}</span>
+                    <button
+                      type="button"
+                      onClick={() => setSelected(community)}
+                      aria-label={`View details for ${community.name}`}
+                    >
+                      Explore <span aria-hidden="true">↗</span>
+                    </button>
+                  </div>
                 </div>
               </article>
             ))}
@@ -544,6 +536,8 @@ export default function Home() {
       </section>
 
       <section className="manifesto" id="why-buzz">
+        <span className="section-bee manifesto-bee-one" aria-hidden="true">🐝</span>
+        <span className="section-bee manifesto-bee-two" aria-hidden="true">🐝</span>
         <div className="manifesto-orbit" aria-hidden="true">
           <span>🐝</span>
           <span>🐝</span>
@@ -574,6 +568,8 @@ export default function Home() {
       </section>
 
       <section className="list-hive" id="list-hive">
+        <span className="section-bee cta-bee-one" aria-hidden="true">🐝</span>
+        <span className="section-bee cta-bee-two" aria-hidden="true">🐝</span>
         <div className="cta-comb" aria-hidden="true">
           <span />
           <span />
