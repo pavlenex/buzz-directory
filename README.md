@@ -5,12 +5,12 @@ researching, and collaborating on Buzz.
 
 ## Experience
 
-- "Find your hive" hero with a pointer-reactive GLSL bee swarm
+- "Find your hive" hero with free-flying SVG bees
 - Minimal outlined featured-community combs
-- Current public community catalog sourced from the Buzz relay
-- Search and category filters
-- Responsive variable-size "bento comb" directory
-- Community detail drawer with copyable channel IDs
+- Public community catalog from the X crawl of advertised Buzz instances
+- Search and category filters (Builders, Bitcoin, Privacy, Culture, GTM, Labs)
+- Responsive "bento comb" directory with Public / Invite access labels
+- Durable https host links; join via Buzz → Add Community + `wss://` relay
 - "List your hive" call to action prepared for a future submission flow
 
 ## Local development

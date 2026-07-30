@@ -7,291 +7,405 @@ type Community = {
   id: string;
   name: string;
   description: string;
-  category: "Buzz HQ" | "Builders" | "Bitcoin" | "Privacy" | "Research" | "Culture" | "Labs";
+  category: "Builders" | "Bitcoin" | "Privacy" | "Culture" | "GTM" | "Labs";
   icon: string;
   signal: string;
   size: "standard" | "wide" | "tall";
+  /** Relay URL to paste into Buzz → Add Community */
+  relay: string;
+  /** How the community was shared on X: bare wss/open join vs invite-first */
+  access: "public" | "invite";
   featured?: boolean;
 };
 
+/**
+ * Public Buzz community instances discovered on X (~2026-07-16 → 2026-07-30).
+ * Source: RESEARCH/BUZZ_COMMUNITIES_X_CRAWL_2026_07_30.md
+ *         RESEARCH/BUZZ_COMMUNITIES_INVITE_AND_PUBLIC_2026_07_30.md
+ * Excludes explicit test instances (e.g. pav2). Invite tokens expire — links use
+ * durable https hosts; join via Add Community + the relay field.
+ */
 const communities: Community[] = [
   {
-    id: "2029f8f4-2f80-4110-a039-acef84660c3a",
-    name: "sonarprivacy",
+    id: "cashu",
+    name: "Cashu",
     description:
-      "Sovereign messaging with public keys, Bluetooth proximity, Nostr reach, and end-to-end encryption.",
+      "Ecash builders on a custom host — bare wss://buzz.cashu.space shared for Add Community.",
+    category: "Bitcoin",
+    icon: "◎",
+    signal: "custom host",
+    size: "wide",
+    relay: "wss://buzz.cashu.space",
+    access: "public",
+    featured: true,
+  },
+  {
+    id: "monero",
+    name: "monero",
+    description:
+      "Monero hive with explicit open-join instructions: paste the relay into Add Community.",
     category: "Privacy",
     icon: "◉",
-    signal: "privacy maxis",
-    size: "wide",
-    featured: true,
-  },
-  {
-    id: "6da2afd6-079d-4bdb-92a3-6d7d537b7c97",
-    name: "buzz inside",
-    description:
-      "Building a secure browser-based Buzz relay search and browsing experience in the open.",
-    category: "Builders",
-    icon: "⌁",
-    signal: "shipping now",
+    signal: "open join",
     size: "tall",
+    relay: "wss://monero.communities.buzz.xyz",
+    access: "public",
     featured: true,
   },
   {
-    id: "bda403ae-518d-4cf9-b633-517947d645ad",
-    name: "agent-games",
-    description:
-      "A playground for dreaming up games where humans and agents share the controls.",
-    category: "Culture",
+    id: "designers",
+    name: "designers",
+    description: "Designers building and shipping on Buzz — early bare-wss share from Jed Bridges.",
+    category: "Builders",
     icon: "✦",
-    signal: "play mode",
+    signal: "craft",
     size: "standard",
+    relay: "wss://designers.communities.buzz.xyz",
+    access: "public",
     featured: true,
   },
   {
-    id: "e7467ae5-ea8a-4c17-b9f2-a130f096da23",
-    name: "SV2-Fleet",
-    description:
-      "Integrating Stratum V2 into Proto Fleet, one mining-stack decision at a time.",
+    id: "bitcoiners",
+    name: "bitcoiners",
+    description: "Bitcoin-native room for builders and operators collaborating with agents.",
     category: "Bitcoin",
-    icon: "⛏",
-    signal: "deep tech",
+    icon: "₿",
+    signal: "bitcoin",
     size: "wide",
+    relay: "wss://bitcoiners.communities.buzz.xyz",
+    access: "invite",
     featured: true,
   },
   {
-    id: "c65e65e4-b31d-4e2b-9c40-51f39a14b045",
-    name: "kindling",
-    description: "Fresh apps, experiments, and useful sparks for the Flint community to try.",
+    id: "sec",
+    name: "sec",
+    description: "Security-minded hive advertised with a bare community host (no /invite/ path).",
+    category: "Privacy",
+    icon: "⌁",
+    signal: "security",
+    size: "standard",
+    relay: "wss://sec.communities.buzz.xyz",
+    access: "public",
+  },
+  {
+    id: "vibecoding",
+    name: "vibecoding",
+    description: "Vibe-coding builders; posts include Add Community + wss:// as a fallback path.",
+    category: "Builders",
+    icon: "⌘",
+    signal: "ship fast",
+    size: "wide",
+    relay: "wss://vibecoding.communities.buzz.xyz",
+    access: "public",
+  },
+  {
+    id: "beastoshi",
+    name: "beastoshi",
+    description: "Early public wss:// share — one of the first communities posted on X.",
     category: "Culture",
     icon: "✷",
-    signal: "new drops",
+    signal: "early hive",
     size: "standard",
+    relay: "wss://beastoshi.communities.buzz.xyz",
+    access: "public",
   },
   {
-    id: "987a2e6e-bc34-49c9-b3d4-9c9f9435b62b",
-    name: "buzz-x",
-    description:
-      "Turning live feedback from X into actionable ideas, bug reports, and fixes.",
-    category: "Buzz HQ",
-    icon: "↗",
-    signal: "feedback loop",
-    size: "wide",
-  },
-  {
-    id: "356fedd0-d6eb-4724-a190-41cf4620d944",
-    name: "build-localhost",
-    description: "A focused one-shot improvement room for making localhost better.",
-    category: "Builders",
-    icon: "⌂",
-    signal: "build room",
-    size: "standard",
-  },
-  {
-    id: "1f3e2ced-49b3-5d16-a6ac-700dd7e3153d",
-    name: "welcome-everyone",
-    description: "Say hi, ask a question, and tell the network what brought you here.",
-    category: "Buzz HQ",
-    icon: "☺",
-    signal: "open door",
-    size: "standard",
-  },
-  {
-    id: "0683e2de-c0c9-496d-bb1f-46d679e3bf38",
-    name: "general",
-    description: "The public town square for loose ideas, quick questions, and good noise.",
-    category: "Buzz HQ",
-    icon: "☄",
-    signal: "town square",
-    size: "tall",
-  },
-  {
-    id: "9f2c4512-988c-42b9-9423-2b8419cbef77",
-    name: "buzz-push-to-talk",
-    description: "Voice-first interaction experiments for faster human-agent collaboration.",
+    id: "audiodev",
+    name: "audiodev",
+    description: "Audio developers collaborating on Buzz with public invite shares.",
     category: "Builders",
     icon: "◖",
-    signal: "voice lab",
+    signal: "sound",
     size: "standard",
+    relay: "wss://audiodev.communities.buzz.xyz",
+    access: "invite",
   },
   {
-    id: "be14c694-2a77-412b-89e3-00939c059f2b",
-    name: "buzz-chrome-ext",
-    description: "Designing the browser extension that brings Buzz closer to the open web.",
-    category: "Builders",
-    icon: "⬡",
-    signal: "extension",
-    size: "standard",
-  },
-  {
-    id: "45e1c7cb-e0e9-432c-bee9-804eae616e05",
-    name: "Understanding Buzz interface to Claude and ChatGPT",
-    description: "Tracing how Buzz talks to the leading AI interfaces and where it can improve.",
-    category: "Research",
-    icon: "⌘",
-    signal: "interface map",
-    size: "wide",
-  },
-  {
-    id: "d115a732-2971-4f9d-bae6-7afd39ae16d5",
-    name: "SV2-Telegram",
-    description: "Connecting Stratum V2 mining signals to useful Telegram alerts.",
-    category: "Bitcoin",
-    icon: "⚡",
-    signal: "mining ops",
-    size: "standard",
-  },
-  {
-    id: "a224e0a0-9453-48fd-83e1-f800cdab37a9",
-    name: "building-buzz-inside-3499452779",
-    description: "A live construction room for the Buzz Inside browsing experience.",
-    category: "Builders",
-    icon: "⤢",
-    signal: "build log",
-    size: "standard",
-  },
-  {
-    id: "2dc3b7b0-5ab2-46b1-b25d-2f09f919816f",
-    name: "building-buzz-inside-3717107867",
-    description: "A second build stream testing new paths through the Buzz ecosystem.",
-    category: "Builders",
-    icon: "⤢",
-    signal: "build log",
-    size: "standard",
-  },
-  {
-    id: "d6999062-ba4b-4578-b48a-e455b8f30b1a",
-    name: "Josh Kerr project 221 planning",
-    description: "A data-minded room chasing the pacing plan for a 3:41 mile.",
-    category: "Culture",
-    icon: "➟",
-    signal: "fast ideas",
-    size: "wide",
-  },
-  {
-    id: "b2f1875e-563e-44cb-b1fa-6e09756856a0",
-    name: "buzz-feedback",
-    description: "Product feedback, sharp edges, and practical ideas for a better Buzz.",
-    category: "Buzz HQ",
-    icon: "※",
-    signal: "signal wanted",
-    size: "standard",
-  },
-  {
-    id: "17b5e9ea-f2cb-4323-bc1d-2cf5776cb313",
-    name: "test",
-    description: "A public sandbox for relay, client, and collaboration checks.",
+    id: "hashie",
+    name: "hashie",
+    description: "Publicly advertised Buzz instance with a bare relay share on X.",
     category: "Labs",
-    icon: "∴",
-    signal: "sandbox",
-    size: "standard",
-  },
-  {
-    id: "f8a2f550-eb1d-46b3-8687-f2cec7e81ae8",
-    name: "kryptos",
-    description: "Agents and humans teaming up to decode the legendary Kryptos challenges.",
-    category: "Research",
     icon: "⌬",
-    signal: "codebreakers",
-    size: "tall",
-  },
-  {
-    id: "1d98753a-93eb-4f30-b5d1-ec51543484c8",
-    name: "buzz-umbrel",
-    description: "Bringing Buzz into the Umbrel home-server ecosystem.",
-    category: "Builders",
-    icon: "☂",
-    signal: "self-hosted",
+    signal: "experiment",
     size: "standard",
+    relay: "wss://hashie.communities.buzz.xyz",
+    access: "public",
   },
   {
-    id: "13798804-0ef7-443b-8256-ef42e86789cd",
-    name: "Open Name Tags (ONT) — dev",
-    description: "Open development for identity-rich name tags on the social web.",
+    id: "tocky",
+    name: "tocky",
+    description: "Community hive shared via public Buzz invite links on X.",
+    category: "Culture",
+    icon: "⏱",
+    signal: "community",
+    size: "standard",
+    relay: "wss://tocky.communities.buzz.xyz",
+    access: "invite",
+  },
+  {
+    id: "gtm",
+    name: "gtm",
+    description: "Go-to-market operators and builders coordinating on Buzz.",
+    category: "GTM",
+    icon: "↗",
+    signal: "growth",
+    size: "standard",
+    relay: "wss://gtm.communities.buzz.xyz",
+    access: "public",
+  },
+  {
+    id: "gtmelite",
+    name: "gtmelite",
+    description: "GTM elite — follow-on growth community shared with public invites.",
+    category: "GTM",
+    icon: "※",
+    signal: "growth+",
+    size: "standard",
+    relay: "wss://gtmelite.communities.buzz.xyz",
+    access: "invite",
+  },
+  {
+    id: "bitcoinplaintalk",
+    name: "bitcoinplaintalk",
+    description: "Plain-talk Bitcoin discussion and collaboration on Buzz.",
+    category: "Bitcoin",
+    icon: "💬",
+    signal: "plain talk",
+    size: "wide",
+    relay: "wss://bitcoinplaintalk.communities.buzz.xyz",
+    access: "invite",
+  },
+  {
+    id: "malibu",
+    name: "malibu",
+    description: "Malibu hive advertised with a bare wss:// relay on X.",
+    category: "Culture",
+    icon: "☀",
+    signal: "west coast",
+    size: "standard",
+    relay: "wss://malibu.communities.buzz.xyz",
+    access: "public",
+  },
+  {
+    id: "eco",
+    name: "eco",
+    description: "Eco-minded builders and collaborators with open-join intent on X.",
+    category: "Culture",
+    icon: "🌿",
+    signal: "eco",
+    size: "standard",
+    relay: "wss://eco.communities.buzz.xyz",
+    access: "public",
+  },
+  {
+    id: "gb10-studio",
+    name: "gb10-studio",
+    description: "GB10 studio hive for hardware/AI studio collaboration.",
+    category: "Labs",
+    icon: "▦",
+    signal: "studio",
+    size: "standard",
+    relay: "wss://gb10-studio.communities.buzz.xyz",
+    access: "invite",
+  },
+  {
+    id: "dgx-spark-gb10",
+    name: "dgx-spark-gb10",
+    description: "DGX Spark / GB10 builders coordinating agents and hardware work.",
+    category: "Labs",
+    icon: "⚡",
+    signal: "spark",
+    size: "wide",
+    relay: "wss://dgx-spark-gb10.communities.buzz.xyz",
+    access: "invite",
+  },
+  {
+    id: "bba",
+    name: "bba",
+    description:
+      "British Blockchain Association — self-described open Buzz community channel.",
+    category: "Bitcoin",
+    icon: "⬡",
+    signal: "open channel",
+    size: "wide",
+    relay: "wss://bba.communities.buzz.xyz",
+    access: "public",
+  },
+  {
+    id: "hermesagent",
+    name: "hermesagent",
+    description: "Hermes agent builders shipping human–agent workflows on Buzz.",
+    category: "Builders",
+    icon: "☿",
+    signal: "agents",
+    size: "standard",
+    relay: "wss://hermesagent.communities.buzz.xyz",
+    access: "invite",
+  },
+  {
+    id: "iagolast",
+    name: "iagolast",
+    description: "Personal/public hive from iagolast with bare relay share on X.",
+    category: "Culture",
+    icon: "≈",
+    signal: "personal",
+    size: "standard",
+    relay: "wss://iagolast.communities.buzz.xyz",
+    access: "public",
+  },
+  {
+    id: "fintech-open-source",
+    name: "fintech-open-source",
+    description: "Open-source fintech builders collaborating in public on Buzz.",
+    category: "Bitcoin",
+    icon: "⇄",
+    signal: "open source",
+    size: "wide",
+    relay: "wss://fintech-open-source.communities.buzz.xyz",
+    access: "invite",
+  },
+  {
+    id: "banking",
+    name: "banking",
+    description: "Banking and finance builders exploring Buzz collaboration.",
+    category: "Bitcoin",
+    icon: "▤",
+    signal: "finance",
+    size: "standard",
+    relay: "wss://banking.communities.buzz.xyz",
+    access: "invite",
+  },
+  {
+    id: "oleiros",
+    name: "oleiros",
+    description: "Oleiros local/community hive shared via public Buzz invites.",
+    category: "Culture",
+    icon: "⌂",
+    signal: "local",
+    size: "standard",
+    relay: "wss://oleiros.communities.buzz.xyz",
+    access: "invite",
+  },
+  {
+    id: "galicia",
+    name: "galicia",
+    description: "Galicia community hive advertised with public invite links.",
+    category: "Culture",
+    icon: "🌊",
+    signal: "local",
+    size: "standard",
+    relay: "wss://galicia.communities.buzz.xyz",
+    access: "invite",
+  },
+  {
+    id: "openb",
+    name: "openb",
+    description: "Open-B builders and collaborators shared publicly on X.",
     category: "Builders",
     icon: "▱",
-    signal: "open dev",
-    size: "wide",
-  },
-  {
-    id: "71921266-32b1-46ba-967d-e0a86a80458f",
-    name: "bitcoinsmiles",
-    description: "Redesigning a nonprofit experience that brings dental care to El Salvador.",
-    category: "Bitcoin",
-    icon: "☀",
-    signal: "real impact",
-    size: "wide",
-  },
-  {
-    id: "90fae8aa-920a-4fc1-8a0c-9bee08bc399c",
-    name: "Atlantis",
-    description: "Using AI to pull on old threads and explore ancient mysteries.",
-    category: "Research",
-    icon: "≈",
-    signal: "deep dive",
+    signal: "open b",
     size: "standard",
+    relay: "wss://openb.communities.buzz.xyz",
+    access: "invite",
   },
   {
-    id: "f4f49714-890c-47f3-bff7-51e867d2c4b4",
-    name: "buzz-gifs",
-    description: "Researching better GIF upload and search support for Buzz.",
-    category: "Builders",
-    icon: "◫",
-    signal: "media lab",
-    size: "standard",
-  },
-  {
-    id: "5e8e3cbd-87e2-48d1-a832-8ba5198ccdf7",
-    name: "sv2-benchmark",
-    description: "Benchmarking Stratum V2 systems and making the numbers useful.",
-    category: "Bitcoin",
-    icon: "⌁",
-    signal: "performance",
-    size: "standard",
-  },
-  {
-    id: "5a63a2ac-c2aa-4142-9410-c1aa9017ae61",
-    name: "building-brainstormcity",
-    description: "A construction zone for a city-sized brainstorm.",
+    id: "romeo-and-juliet",
+    name: "romeo-and-juliet",
+    description: "A themed cultural hive — public invite share from the X crawl.",
     category: "Culture",
-    icon: "▦",
-    signal: "idea factory",
+    icon: "♡",
+    signal: "culture",
     size: "standard",
+    relay: "wss://romeo-and-juliet.communities.buzz.xyz",
+    access: "invite",
   },
   {
-    id: "2fd6ce3b-6e56-4675-9311-4c6b3d882755",
-    name: "test2",
-    description: "Another open sandbox for checking new network behavior.",
+    id: "midd-relay",
+    name: "midd-relay",
+    description: "Relay-focused hive advertised with a bare wss:// share.",
     category: "Labs",
-    icon: "∵",
-    signal: "sandbox",
+    icon: "⇄",
+    signal: "relay",
     size: "standard",
+    relay: "wss://midd-relay.communities.buzz.xyz",
+    access: "public",
   },
   {
-    id: "04b4d1d5-1f03-434a-ada0-6dbad20754d6",
-    name: "mesh-testing",
-    description: "Experiments around local-first, resilient mesh communication.",
-    category: "Privacy",
-    icon: "⌗",
-    signal: "mesh lab",
+    id: "thakaly",
+    name: "thakaly",
+    description: "Thakaly community instance discovered via public X shares.",
+    category: "Culture",
+    icon: "◇",
+    signal: "community",
+    size: "standard",
+    relay: "wss://thakaly.communities.buzz.xyz",
+    access: "invite",
+  },
+  {
+    id: "creatormagic",
+    name: "creatormagic",
+    description: "FREE Creator Magic community for creators collaborating with agents.",
+    category: "Culture",
+    icon: "✦",
+    signal: "creators",
+    size: "tall",
+    relay: "wss://creatormagic.communities.buzz.xyz",
+    access: "public",
+  },
+  {
+    id: "devin-builders",
+    name: "devin-builders",
+    description: "Devin builders coordinating agentic development work on Buzz.",
+    category: "Builders",
+    icon: "⛏",
+    signal: "builders",
     size: "wide",
+    relay: "wss://devin-builders.communities.buzz.xyz",
+    access: "invite",
+  },
+  {
+    id: "milysec",
+    name: "milysec",
+    description: "Security community hive shared publicly with invite links on X.",
+    category: "Privacy",
+    icon: "⌖",
+    signal: "security",
+    size: "standard",
+    relay: "wss://milysec.communities.buzz.xyz",
+    access: "invite",
+  },
+  {
+    id: "tech",
+    name: "tech",
+    description:
+      "Tech hive found in the invite-pass crawl (not in the first bare-wss pass).",
+    category: "Builders",
+    icon: "⚙",
+    signal: "tech",
+    size: "standard",
+    relay: "wss://tech.communities.buzz.xyz",
+    access: "invite",
   },
 ];
 
 const categories = [
   "All",
-  "Buzz HQ",
   "Builders",
   "Bitcoin",
   "Privacy",
-  "Research",
   "Culture",
+  "GTM",
   "Labs",
 ] as const;
 
 const featured = communities.filter((community) => community.featured);
+
+/** Durable https host for the community (invite tokens expire; use Add Community + relay). */
 const communitySource = (community: Community) =>
-  `buzz://message?channel=${community.id}&id=${community.id}`;
+  community.relay.replace(/^wss:\/\//, "https://");
+
+const accessLabel = (community: Community) =>
+  community.access === "public" ? "Public" : "Invite";
 
 export default function Home() {
   const [query, setQuery] = useState("");
@@ -305,7 +419,7 @@ export default function Home() {
         category === "All" || community.category === category;
       const matchesQuery =
         !normalized ||
-        `${community.name} ${community.description} ${community.category}`
+        `${community.name} ${community.description} ${community.category} ${community.relay}`
           .toLowerCase()
           .includes(normalized);
       return matchesCategory && matchesQuery;
@@ -377,7 +491,9 @@ export default function Home() {
             >
               <span className="feature-icon">{community.icon}</span>
               <span className="feature-name">{community.name}</span>
-              <span className="feature-signal">Public · open in Buzz</span>
+              <span className="feature-signal">
+                {accessLabel(community)} · {community.signal}
+              </span>
             </a>
           ))}
           <div className="empty-cell empty-cell-one" aria-hidden="true" />
@@ -450,7 +566,10 @@ export default function Home() {
           <span>
             Showing <strong>{results.length}</strong> hives
           </span>
-          <span>Signal is human-curated · updated from the public relay</span>
+          <span>
+            Sourced from public X shares · paste{" "}
+            <code>wss://</code> into Add Community
+          </span>
         </div>
 
         {results.length > 0 ? (
@@ -460,10 +579,15 @@ export default function Home() {
                 className="community-card"
                 href={communitySource(community)}
                 key={community.id}
-                aria-label={`Open ${community.name} in Buzz`}
+                aria-label={`Open ${community.name} community host`}
+                title={`Add Community → ${community.relay}`}
               >
                 <div className="community-card-inner">
-                  <span className="card-access card-access-public">Public</span>
+                  <span
+                    className={`card-access card-access-${community.access}`}
+                  >
+                    {accessLabel(community)}
+                  </span>
                   <h3>{community.name}</h3>
                   <p>{community.description}</p>
                 </div>

@@ -14,17 +14,25 @@ test("exports the Buzz public-community directory for static hosting", async () 
   assert.match(html, /hive\./);
   assert.match(html, /Explore all hives/);
   assert.match(html, /Pick a frequency\./);
-  assert.match(html, /sonarprivacy/);
-  assert.match(html, /SV2-Fleet/);
+  assert.match(html, /Cashu/);
+  assert.match(html, /monero/);
+  assert.match(html, /bitcoiners/);
+  assert.match(html, /vibecoding/);
   assert.match(html, /List your hive/);
   assert.match(html, /bento-comb/);
   assert.match(html, /bee-drift-field/);
   assert.match(html, /drift-bee-pink/);
   assert.match(html, /card-access-public[^>]*>Public/);
+  assert.match(html, /card-access-invite[^>]*>Invite/);
   assert.match(
     html,
-    /<a class="community-card" href="buzz:\/\/message\?channel=/,
+    /<a class="community-card" href="https:\/\/buzz\.cashu\.space"/,
   );
+  assert.match(
+    html,
+    /href="https:\/\/monero\.communities\.buzz\.xyz"/,
+  );
+  assert.doesNotMatch(html, /sonarprivacy|SV2-Fleet|building-buzz-inside|test2/);
   assert.match(html, /og\.png/);
   assert.doesNotMatch(html, /<canvas/i);
   assert.doesNotMatch(html, /card-topline|card-icon|card-footer|hive-drawer/);
