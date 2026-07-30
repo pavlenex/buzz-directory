@@ -17,7 +17,8 @@ the repo, and send a patch.
 - Responsive "bento comb" directory with Public / Invite access labels
 - One-click `buzz://add-community` links that open Buzz with the community name
   and `wss://` relay prefilled
-- "List your hive" call to action prepared for a future submission flow
+- Three-field "List your hive" flow with live public/private detection, a
+  Buzz-community handoff, and a prefilled GitHub issue fallback
 
 ## The bee swarm
 

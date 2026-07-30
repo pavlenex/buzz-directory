@@ -57,6 +57,7 @@ const anchorGroups: readonly AnchorGroup[] = [
   { selector: ".manifesto-actions .button", share: 3, pad: 20, land: false },
   { selector: ".manifesto article", share: 5, pad: 22, land: false },
   { selector: ".list-hive h2", share: 3, pad: 30, land: false },
+  { selector: ".listing-form", share: 4, pad: 24, land: false },
   { selector: ".cta-comb", share: 2, pad: 20, land: false },
   { selector: ".footer-links a", share: 2, pad: 18, land: false },
 ];
@@ -212,7 +213,7 @@ export function createBeeField(host: HTMLElement): BeeField {
         ".manifesto-lede",
         ".manifesto-grid",
         ".list-hive > div:not(.cta-comb)",
-        ".list-hive > .button",
+        ".listing-form",
         "footer",
       ].join(","),
     );

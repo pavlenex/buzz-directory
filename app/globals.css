@@ -114,7 +114,8 @@ main {
 }
 
 button,
-input {
+input,
+textarea {
   font: inherit;
 }
 
@@ -134,7 +135,8 @@ button {
 
 button:focus-visible,
 a:focus-visible,
-input:focus-visible {
+input:focus-visible,
+textarea:focus-visible {
   outline: 4px solid var(--blue);
   outline-offset: 3px;
 }
@@ -860,20 +862,20 @@ input:focus-visible {
 .list-hive {
   position: relative;
   overflow: hidden;
-  min-height: 540px;
+  min-height: 720px;
   padding: var(--section-y) var(--gutter);
   background: var(--ink);
   color: var(--white);
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 70px;
+  grid-template-columns: minmax(0, 0.78fr) minmax(460px, 1.22fr);
+  align-items: start;
+  gap: clamp(48px, 6vw, 110px);
 }
 
 .list-hive > div:not(.cta-comb) {
   position: relative;
   z-index: 2;
-  max-width: 980px;
+  max-width: 660px;
 }
 
 .list-hive h2 {
@@ -888,11 +890,210 @@ input:focus-visible {
   line-height: 1.4;
 }
 
-.list-hive > .button {
+.listing-route-note {
+  margin-top: 34px;
+  padding: 20px 22px;
+  border: 2px solid rgba(247, 255, 0, 0.62);
+  display: grid;
+  gap: 8px;
+}
+
+.listing-route-note strong {
+  color: var(--yellow);
+  font: 900 12px/1 var(--font-ui);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.listing-route-note span {
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.listing-route-note code {
+  padding: 2px 5px;
+  background: rgba(247, 255, 0, 0.14);
+  color: var(--yellow);
+  font: 800 0.92em/1 var(--font-ui);
+}
+
+.listing-form {
   position: relative;
   z-index: 2;
-  min-width: 230px;
-  box-shadow: 7px 7px 0 var(--pink);
+  width: min(760px, 100%);
+  justify-self: end;
+  padding: clamp(24px, 3vw, 42px);
+  border: 2px solid var(--yellow);
+  background: var(--paper);
+  box-shadow: 10px 10px 0 var(--pink);
+  color: var(--ink);
+  display: grid;
+  gap: 22px;
+}
+
+.listing-form button:focus-visible {
+  outline-color: var(--blue);
+}
+
+.listing-form-heading {
+  padding-bottom: 18px;
+  border-bottom: 2px solid var(--ink);
+  display: grid;
+  gap: 8px;
+}
+
+.listing-form-heading > span {
+  font: 900 10px/1 var(--font-ui);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.listing-form-heading > strong {
+  font: 950 clamp(24px, 2.5vw, 38px)/0.96 var(--font-display);
+  letter-spacing: -0.04em;
+}
+
+.listing-field {
+  display: grid;
+  gap: 9px;
+  font: 900 11px/1 var(--font-ui);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.listing-field-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.listing-field-label > span:last-child {
+  color: rgba(17, 18, 15, 0.58);
+  font-size: 10px;
+}
+
+.listing-field input,
+.listing-field textarea {
+  width: 100%;
+  border: 2px solid var(--ink);
+  border-radius: 0;
+  background: var(--white);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1.35;
+  text-transform: none;
+}
+
+.listing-field input {
+  min-height: 54px;
+  padding: 0 15px;
+}
+
+.listing-field textarea {
+  min-height: 104px;
+  padding: 14px 15px;
+  resize: vertical;
+}
+
+.listing-field input::placeholder,
+.listing-field textarea::placeholder {
+  color: rgba(17, 18, 15, 0.48);
+}
+
+.listing-field input[aria-invalid="true"] {
+  border-color: #c3225c;
+  background: #fff2f7;
+}
+
+.listing-field small {
+  color: rgba(17, 18, 15, 0.62);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1.35;
+  text-transform: none;
+}
+
+.listing-access {
+  min-height: 62px;
+  padding: 13px 15px;
+  border: 1.5px solid var(--ink);
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 12px 18px;
+}
+
+.listing-access strong {
+  padding: 7px 9px;
+  background: var(--ink);
+  color: var(--white);
+  font: 900 10px/1 var(--font-ui);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.listing-access span {
+  color: rgba(17, 18, 15, 0.72);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.listing-access-public {
+  background: color-mix(in srgb, var(--green) 28%, var(--white));
+}
+
+.listing-access-private {
+  background: color-mix(in srgb, var(--pink) 24%, var(--white));
+}
+
+.listing-access-public strong {
+  background: #116b36;
+}
+
+.listing-access-private strong {
+  background: #912358;
+}
+
+.listing-error {
+  max-width: none !important;
+  margin: -6px 0 0 !important;
+  padding: 12px 14px;
+  border-left: 5px solid #c3225c;
+  background: #fff2f7;
+  color: #78113a !important;
+  font-size: 13px !important;
+  font-weight: 800;
+}
+
+.listing-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr);
+  gap: 12px;
+}
+
+.listing-actions .button {
+  width: 100%;
+  padding-inline: 16px;
+}
+
+.listing-github {
+  background: var(--white);
+  color: var(--ink);
+}
+
+.listing-submit-note {
+  max-width: none !important;
+  margin: -8px 0 0 !important;
+  color: rgba(17, 18, 15, 0.65) !important;
+  font-size: 11px !important;
+  font-weight: 750;
+  line-height: 1.4 !important;
 }
 
 .cta-comb {
@@ -1084,6 +1285,17 @@ footer {
     max-width: 620px;
   }
 
+  .list-hive {
+    min-height: 0;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 42px;
+  }
+
+  .listing-form {
+    width: min(760px, 100%);
+    justify-self: stretch;
+  }
+
   footer {
     grid-template-columns: minmax(0, 1fr);
     justify-items: start;
@@ -1121,16 +1333,6 @@ footer {
 
   .manifesto-grid h3 {
     margin-top: 16px;
-  }
-
-  .list-hive {
-    min-height: 0;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 40px;
-  }
-
-  .list-hive > .button {
-    justify-self: stretch;
   }
 
   .results-line {
@@ -1331,8 +1533,27 @@ footer {
   }
 
   .manifesto-actions .button,
-  .list-hive > .button {
+  .listing-actions .button {
     width: 100%;
+  }
+
+  .listing-form {
+    padding: 22px 18px;
+    gap: 18px;
+    box-shadow: 7px 7px 0 var(--pink);
+  }
+
+  .listing-access {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 9px;
+  }
+
+  .listing-access strong {
+    width: fit-content;
+  }
+
+  .listing-actions {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .empty-state {

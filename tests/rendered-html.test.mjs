@@ -14,7 +14,7 @@ test("exports the buzzdir catalog for static hosting", async () => {
   // The hero's primary action is listing a hive; exploring is secondary.
   assert.match(
     html,
-    /class="button button-dark button-big"[^>]*>List your hive/,
+    /class="button button-dark button-big" href="#list-hive">List your hive/,
   );
   assert.match(
     html,
@@ -27,6 +27,22 @@ test("exports the buzzdir catalog for static hosting", async () => {
   assert.match(html, /class="card-category">Builders/);
   assert.match(html, /aria-live="polite" aria-atomic="true"/);
   assert.match(html, /<kbd aria-hidden="true">TYPE<\/kbd>/);
+  assert.match(html, /<form class="listing-form"/);
+  assert.match(
+    html,
+    /<input(?=[^>]*name="community-name")(?=[^>]*required)[^>]*>/,
+  );
+  assert.match(
+    html,
+    /<input(?=[^>]*name="community-url")(?=[^>]*required)[^>]*>/,
+  );
+  assert.match(
+    html,
+    /<textarea(?=[^>]*name="community-description")(?=[^>]*required)[^>]*>/,
+  );
+  assert.match(html, /Three fields\. All required\./);
+  assert.match(html, /Copy details \+ join/);
+  assert.match(html, /Open a GitHub issue/);
   for (const name of ["Cashu", "monero", "bitcoiners", "vibecoding"]) {
     assert.match(html, new RegExp(name));
   }
@@ -241,6 +257,13 @@ test("catalog and deployment contract", async () => {
   assert.match(page, /encodeURIComponent\(community\.name\)/);
   // The wss:// template-literal type is erased at runtime.
   assert.match(page, /community\.relay\.startsWith\("wss:\/\/"\)/);
+  assert.match(page, /classifyListingUrl/);
+  assert.match(page, /parsed\.pathname[\s\S]*includes\("invite"\)/);
+  assert.match(page, /parsed\.protocol === "wss:"/);
+  assert.match(page, /LISTING_DESCRIPTION_LIMIT = 140/);
+  assert.match(page, /new URL\(`\$\{GITHUB_URL\}\/issues\/new`\)/);
+  assert.match(page, /navigator\.clipboard/);
+  assert.match(page, /window\.location\.href = buzzdirDeepLink/);
 
   // Placeholders must never reach production: an unclaimed GitHub namespace is
   // a takeover waiting to happen, and a fake relay is a dead call to action.
@@ -321,4 +344,5 @@ test("catalog and deployment contract", async () => {
 
   assert.match(readme, /One-click `buzz:\/\/add-community` links/);
   assert.match(readme, /Add Community dialog/);
+  assert.match(readme, /prefilled GitHub issue fallback/);
 });

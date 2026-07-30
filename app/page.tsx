@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import { BeeDrift } from "./BeeDrift";
 import {
   categories,
@@ -11,6 +11,9 @@ import {
 const GITHUB_URL = "https://github.com/pavlenex/buzz-directory";
 const BUZZDIR_NAME = "buzzdir";
 const BUZZDIR_RELAY = "wss://flint.communities.buzz.xyz";
+const LISTING_DESCRIPTION_LIMIT = 140;
+
+type ListingAccess = "empty" | "public" | "private" | "invalid";
 
 type FeaturedCommunity = Community & {
   featured: NonNullable<Community["featured"]>;
@@ -34,6 +37,28 @@ const buzzdirDeepLink = communityDeepLink({
   name: BUZZDIR_NAME,
   relay: BUZZDIR_RELAY,
 });
+
+const classifyListingUrl = (value: string): ListingAccess => {
+  const normalized = value.trim();
+  if (!normalized) return "empty";
+
+  try {
+    const parsed = new URL(normalized);
+    const hasInvitePath = parsed.pathname
+      .toLowerCase()
+      .split("/")
+      .includes("invite");
+    if (hasInvitePath) return "public";
+    if (parsed.protocol === "wss:") return "private";
+  } catch {
+    return "invalid";
+  }
+
+  return "invalid";
+};
+
+const listingAccessLabel = (access: ListingAccess) =>
+  access === "public" ? "Public" : "Private / invite-only";
 
 function CommunityCard({ community }: { community: Community }) {
   return (
@@ -64,6 +89,15 @@ export default function Home() {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<(typeof categories)[number]>("All");
   const [notice, setNotice] = useState("");
+  const [listingName, setListingName] = useState("");
+  const [listingUrl, setListingUrl] = useState("");
+  const [listingDescription, setListingDescription] = useState("");
+  const [listingError, setListingError] = useState("");
+
+  const listingAccess = useMemo(
+    () => classifyListingUrl(listingUrl),
+    [listingUrl],
+  );
 
   const results = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -90,6 +124,84 @@ export default function Home() {
     window.setTimeout(() => setNotice(""), 3200);
   };
 
+  const listingSummary = () => {
+    const access = listingAccessLabel(listingAccess);
+    return [
+      `Community: ${listingName.trim()}`,
+      `Link: ${listingUrl.trim()}`,
+      `Visibility: ${access}`,
+      `Description: ${listingDescription.trim()}`,
+    ].join("\n");
+  };
+
+  const listingIssueUrl = () => {
+    const issueUrl = new URL(`${GITHUB_URL}/issues/new`);
+    issueUrl.searchParams.set(
+      "title",
+      `List community: ${listingName.trim()}`,
+    );
+    issueUrl.searchParams.set(
+      "body",
+      [
+        "## Community listing",
+        "",
+        `**Name:** ${listingName.trim()}`,
+        `**Community URL:** ${listingUrl.trim()}`,
+        `**Visibility:** ${listingAccessLabel(listingAccess)}`,
+        "",
+        "### Short description",
+        listingDescription.trim(),
+        "",
+        "---",
+        "Submitted through buzzdir.",
+      ].join("\n"),
+    );
+    return issueUrl.toString();
+  };
+
+  const handleListingSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (listingAccess === "empty" || listingAccess === "invalid") {
+      setListingError(
+        "Use a bare wss:// relay for a private hive or a link containing /invite/ for a public hive.",
+      );
+      return;
+    }
+
+    setListingError("");
+    const submitter = (event.nativeEvent as SubmitEvent)
+      .submitter as HTMLButtonElement | null;
+    const intent = submitter?.dataset.intent;
+
+    if (intent === "github") {
+      const issueUrl = listingIssueUrl();
+      const issueWindow = window.open(
+        issueUrl,
+        "_blank",
+        "noopener,noreferrer",
+      );
+      if (!issueWindow) window.location.href = issueUrl;
+      return;
+    }
+
+    if (navigator.clipboard) {
+      void navigator.clipboard
+        .writeText(listingSummary())
+        .then(() =>
+          showNotice(
+            "Listing copied. Paste it in buzzdir and vibe with the bot.",
+          ),
+        )
+        .catch(() =>
+          showNotice("Join buzzdir, then paste your community details."),
+        );
+    } else {
+      showNotice("Join buzzdir, then paste your community details.");
+    }
+    window.location.href = buzzdirDeepLink;
+  };
+
   return (
     <main>
       <BeeDrift />
@@ -113,15 +225,12 @@ export default function Home() {
             about Buzz.
           </p>
           <div className="hero-actions">
-            <button
+            <a
               className="button button-dark button-big"
-              type="button"
-              onClick={() =>
-                showNotice("You’re on the early list. Submission flow coming next.")
-              }
+              href="#list-hive"
             >
-              List your hive <span aria-hidden="true">↗</span>
-            </button>
+              List your hive <span aria-hidden="true">↓</span>
+            </a>
             <a className="button button-ghost button-big" href="#directory">
               Explore all hives <span aria-hidden="true">↓</span>
             </a>
@@ -318,23 +427,149 @@ export default function Home() {
           <span />
           <span />
         </div>
-        <div>
+        <div className="list-hive-copy">
           <span className="section-index">[ ADMINS, THIS ONE&apos;S FOR YOU ]</span>
-          <h2>Got a hive worth finding?</h2>
+          <h2 id="list-hive-heading">Bring your hive.</h2>
           <p>
-            Put your public community in front of builders looking for the next
-            place to contribute. Listing requests are the next thing we&apos;re shipping.
+            The best way in is social: share your details in the {BUZZDIR_NAME}{" "}
+            community, meet the people maintaining the directory, and vibe with
+            the bot. Prefer GitHub? Open a prefilled issue instead.
           </p>
+          <div className="listing-route-note">
+            <strong>How visibility works</strong>
+            <span>
+              A link containing <code>/invite/</code> is listed as public. A
+              bare <code>wss://</code> relay is listed as private / invite-only.
+            </span>
+          </div>
         </div>
-        <button
-          className="button button-yellow button-big"
-          type="button"
-          onClick={() =>
-            showNotice("You’re on the early list. Submission flow coming next.")
-          }
+
+        <form
+          className="listing-form"
+          aria-labelledby="list-hive-heading"
+          onSubmit={handleListingSubmit}
         >
-          List your hive <span aria-hidden="true">↗</span>
-        </button>
+          <div className="listing-form-heading">
+            <span>Three fields. All required.</span>
+            <strong>Tell us about your community.</strong>
+          </div>
+
+          <label className="listing-field">
+            <span>Community name</span>
+            <input
+              type="text"
+              name="community-name"
+              value={listingName}
+              onChange={(event) => setListingName(event.target.value)}
+              maxLength={48}
+              autoComplete="organization"
+              placeholder="e.g. bitcoiners"
+              required
+            />
+          </label>
+
+          <label className="listing-field">
+            <span>Community URL</span>
+            <input
+              type="url"
+              name="community-url"
+              value={listingUrl}
+              onChange={(event) => {
+                setListingUrl(event.target.value);
+                setListingError("");
+              }}
+              maxLength={300}
+              inputMode="url"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              placeholder="wss://… or https://…/invite/…"
+              aria-describedby="listing-url-help listing-url-status"
+              aria-invalid={listingAccess === "invalid"}
+              required
+            />
+            <small id="listing-url-help">
+              Submit the link you actually want people to use.
+            </small>
+          </label>
+
+          <div
+            className={`listing-access listing-access-${listingAccess}`}
+            id="listing-url-status"
+            role="status"
+            aria-live="polite"
+          >
+            {listingAccess === "public" ? (
+              <>
+                <strong>Public hive</strong>
+                <span>The /invite/ link lets anyone request to join.</span>
+              </>
+            ) : listingAccess === "private" ? (
+              <>
+                <strong>Private hive</strong>
+                <span>A bare wss:// relay is marked invite-only.</span>
+              </>
+            ) : listingAccess === "invalid" ? (
+              <>
+                <strong>Link not recognized</strong>
+                <span>Use a wss:// address or a link containing /invite/.</span>
+              </>
+            ) : (
+              <>
+                <strong>Public or private?</strong>
+                <span>
+                  We detect it from /invite/ versus a bare wss:// relay.
+                </span>
+              </>
+            )}
+          </div>
+
+          <label className="listing-field">
+            <span className="listing-field-label">
+              <span>Very short description</span>
+              <span aria-live="polite">
+                {listingDescription.length}/{LISTING_DESCRIPTION_LIMIT}
+              </span>
+            </span>
+            <textarea
+              name="community-description"
+              value={listingDescription}
+              onChange={(event) => setListingDescription(event.target.value)}
+              maxLength={LISTING_DESCRIPTION_LIMIT}
+              rows={3}
+              placeholder="Who is it for, and what happens there?"
+              required
+            />
+          </label>
+
+          {listingError ? (
+            <p className="listing-error" role="alert">
+              {listingError}
+            </p>
+          ) : null}
+
+          <div className="listing-actions">
+            <button
+              className="button button-yellow button-big"
+              type="submit"
+              data-intent="buzz"
+            >
+              Copy details + join {BUZZDIR_NAME}{" "}
+              <span aria-hidden="true">↗</span>
+            </button>
+            <button
+              className="button listing-github button-big"
+              type="submit"
+              data-intent="github"
+            >
+              Open a GitHub issue <span aria-hidden="true">↗</span>
+            </button>
+          </div>
+          <p className="listing-submit-note">
+            Recommended: we copy your listing, open {BUZZDIR_NAME} in Buzz, and
+            you paste it into the channel.
+          </p>
+        </form>
       </section>
 
       <footer>
