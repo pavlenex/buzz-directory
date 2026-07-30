@@ -8,12 +8,9 @@ import {
   type Community,
 } from "./communities";
 
-// TODO(pav): swap these two for the real values. A test fails while either
-// still says REPLACE-ME, because github.com/REPLACE-ME is an unclaimed
-// namespace anyone could register and point at the "View the source" button.
-const GITHUB_URL = "https://github.com/REPLACE-ME/buzz-directory";
+const GITHUB_URL = "https://github.com/pavlenex/buzz-directory";
 const BUZZDIR_NAME = "buzzdir";
-const BUZZDIR_RELAY = "wss://REPLACE-ME.example";
+const BUZZDIR_RELAY = "wss://flint.communities.buzz.xyz";
 
 type FeaturedCommunity = Community & {
   featured: NonNullable<Community["featured"]>;
