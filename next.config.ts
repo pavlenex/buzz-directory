@@ -2,7 +2,8 @@ import type { NextConfig } from "next";
 
 const repositoryName = process.env.GITHUB_REPOSITORY?.split("/")[1] ?? "";
 const isUserOrOrganizationSite = repositoryName.endsWith(".github.io");
-const configuredBasePath = process.env.PAGES_BASE_PATH?.trim();
+const hasConfiguredBasePath = process.env.PAGES_BASE_PATH !== undefined;
+const configuredBasePath = process.env.PAGES_BASE_PATH?.trim() ?? "";
 const automaticBasePath =
   process.env.GITHUB_ACTIONS === "true" && !isUserOrOrganizationSite
     ? `/${repositoryName}`
@@ -10,7 +11,9 @@ const automaticBasePath =
 const pagesBasePath =
   configuredBasePath === "/"
     ? ""
-    : configuredBasePath || automaticBasePath;
+    : hasConfiguredBasePath
+      ? configuredBasePath
+      : automaticBasePath;
 
 const nextConfig: NextConfig = {
   output: "export",

@@ -62,10 +62,11 @@ so the page edges line up. Breakpoints run wide to narrow at 1180 / 980 / 760 /
 620 / 420, and each one only changes what actually breaks at that width.
 
 There is no CSS framework. Tailwind was imported once but the markup used zero
-utility classes, so all it ever shipped was preflight; the handful of resets the
-stylesheet actually depends on now sit at the top of `globals.css`. Removing the
-import was verified pixel-identical at 1440 and 390 across the full page. If you
-add utility classes you are adding a framework back — do it deliberately.
+utility classes, so all it ever shipped was preflight; the import, PostCSS
+plugin, and packages have been removed, and the handful of resets the stylesheet
+actually depends on now sit at the top of `globals.css`. The CSS-only version
+was verified pixel-identical at 1440 and 390 across the full page. If you add
+utility classes you are adding a framework back — do it deliberately.
 
 ## Security notes
 
@@ -80,10 +81,9 @@ mean fronting Pages with something that can set real headers.
 The site loads zero third-party resources: no CDN, no analytics, no webfonts,
 no cookies, no storage. Keep it that way and the CSP stays honest.
 
-`app/page.tsx` ships `GITHUB_URL` and `BUZZDIR_RELAY` as constants. A test fails
-while either still contains `REPLACE-ME`, because `github.com/REPLACE-ME` is an
-unclaimed namespace — anyone who registers it would own the "View the source"
-link. CI runs `npm test`, so a placeholder cannot reach production.
+`app/page.tsx` ships the canonical GitHub URL and Buzz relay as constants. The
+test suite rejects placeholder values so an unclaimed namespace or dead relay
+cannot reach production.
 
 ## Local development
 
@@ -122,6 +122,15 @@ publishes the site whenever `main` is updated:
 3. Push to `main`, or run **Deploy buzzdir to GitHub Pages** manually from
    the Actions tab.
 
-Project sites automatically use `/<repository-name>` as the base path.
-User or organization sites named `<owner>.github.io` use `/`. For a custom
-domain, set the Actions variable `PAGES_BASE_PATH` to `/` and rebuild.
+The workflow reads the site URL and base path from `actions/configure-pages`,
+so both the default `pavlenex.github.io/buzz-directory/` URL and the
+`buzzdir.xyz` custom domain build with the correct asset paths.
+
+The custom domain is configured in **Settings → Pages** (or through GitHub's
+Pages API), not with a `CNAME` file: custom Actions workflows ignore that file.
+After the domain is configured, add the DNS records for `buzzdir.xyz` and
+enable **Enforce HTTPS** when GitHub makes the option available.
+
+## License
+
+This project is available under the [MIT License](LICENSE).
