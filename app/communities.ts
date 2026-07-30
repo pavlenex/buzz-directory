@@ -221,6 +221,13 @@ export const communities: readonly Community[] = [
     relay: "wss://iagolast.communities.buzz.xyz",
   },
   {
+    name: "LDK",
+    description:
+      "Lightning Dev Kit community for developers building on Bitcoin and Lightning.",
+    category: "Bitcoin",
+    relay: "wss://lightningdevkit.communities.buzz.xyz",
+  },
+  {
     name: "malibu",
     description: "Malibu hive advertised with a bare wss:// relay on X.",
     category: "Culture",

@@ -45,7 +45,7 @@ test("exports the buzzdir catalog for static hosting", async () => {
   assert.match(html, /List on GitHub/);
   assert.match(html, /Build on Buzz/);
   assert.match(html, /Open prefilled GitHub issue/);
-  for (const name of ["Cashu", "monero", "bitcoiners", "vibecoding"]) {
+  for (const name of ["Cashu", "LDK", "monero", "bitcoiners", "vibecoding"]) {
     assert.match(html, new RegExp(name));
   }
 
@@ -66,7 +66,7 @@ test("exports the buzzdir catalog for static hosting", async () => {
       /<a class="community-card" href="([^"]+)"[\s\S]*?<span class="card-access card-access-(public|invite)">/g,
     ),
   ];
-  assert.equal(cards.length, 35);
+  assert.equal(cards.length, 36);
   for (const [, href, access] of cards) {
     if (access === "public") {
       assert.match(href, /^https:\/\//);
@@ -111,7 +111,7 @@ test("exports the buzzdir catalog for static hosting", async () => {
     ),
   ].map(([, url]) => url);
 
-  assert.ok(addLinks.length >= 18);
+  assert.ok(addLinks.length >= 19);
   assert.ok(inviteLinks.length >= 16);
   assert.equal(new Set(inviteLinks).size, 16);
   assert.ok(
@@ -123,6 +123,13 @@ test("exports the buzzdir catalog for static hosting", async () => {
   assert.ok(!addLinks.some(({ name }) => name === "bitcoiners"));
   assert.ok(!addLinks.some(({ name }) => name === "Cashu"));
   assert.ok(addLinks.some(({ name }) => name === "monero"));
+  assert.ok(
+    addLinks.some(
+      ({ name, relay }) =>
+        name === "LDK" &&
+        relay === "wss://lightningdevkit.communities.buzz.xyz",
+    ),
+  );
 
   // Deliberately excluded test instances must not creep back into the catalog.
   assert.doesNotMatch(html, /sonarprivacy|SV2-Fleet|building-buzz-inside|test2/);
@@ -398,8 +405,8 @@ test("catalog and deployment contract", async () => {
   const publicUrls = [
     ...communityData.matchAll(/publicUrl:\s*\n?\s*"(https:\/\/[^"]+)"/g),
   ].map(([, url]) => url);
-  assert.equal(relays.length, 35);
-  assert.equal(new Set(relays).size, 35);
+  assert.equal(relays.length, 36);
+  assert.equal(new Set(relays).size, 36);
   assert.equal(inviteUrls.length, 16);
   assert.equal(new Set(inviteUrls).size, 16);
   assert.ok(inviteUrls.every((url) => url.includes("/invite/")));
