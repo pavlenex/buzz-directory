@@ -24,6 +24,9 @@ test("exports the buzzdir catalog for static hosting", async () => {
   assert.match(html, /List your hive/);
   assert.match(html, /bento-comb/);
   assert.match(html, /og\.png/);
+  assert.match(html, /class="card-category">Builders/);
+  assert.match(html, /aria-live="polite" aria-atomic="true"/);
+  assert.match(html, /<kbd aria-hidden="true">TYPE<\/kbd>/);
   for (const name of ["Cashu", "monero", "bitcoiners", "vibecoding"]) {
     assert.match(html, new RegExp(name));
   }
@@ -192,6 +195,9 @@ test("keeps the page cheap to ship", async () => {
   assert.match(styles, /@media \(hover: none\)/);
   assert.match(styles, /@media \(max-width: 980px\)/);
   assert.match(styles, /@media \(max-width: 420px\)/);
+  assert.match(styles, /--comb-clip: polygon\(/);
+  assert.match(styles, /clip-path: var\(--comb-card-clip\)/);
+  assert.match(styles, /\.search-box \{[\s\S]*position: sticky/);
 
   // Runtime deps stay at exactly next + react + react-dom.
   const { dependencies } = JSON.parse(packageJson);
@@ -280,6 +286,8 @@ test("catalog and deployment contract", async () => {
   assert.match(layout, /width: 1200/);
   assert.match(layout, /Content-Security-Policy/);
   assert.match(layout, /referrer: "strict-origin-when-cross-origin"/);
+  assert.match(layout, /alternates: \{ canonical: "\.\/" \}/);
+  assert.match(layout, /themeColor: "#f7ff00"/);
 
   assert.match(nextConfig, /output: "export"/);
   assert.match(nextConfig, /basePath: pagesBasePath/);

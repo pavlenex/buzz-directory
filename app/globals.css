@@ -54,6 +54,22 @@ canvas {
   --tap: 46px;
   --font-display: "Aptos Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
   --font-ui: "Aptos", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --comb-clip: polygon(
+    25% 0,
+    75% 0,
+    100% 50%,
+    75% 100%,
+    25% 100%,
+    0 50%
+  );
+  --comb-card-clip: polygon(
+    19% 0,
+    81% 0,
+    100% 50%,
+    81% 100%,
+    19% 100%,
+    0 50%
+  );
   --comb-pattern: url("data:image/svg+xml,%3Csvg width='144' height='84' viewBox='0 0 144 84' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%2311120f' stroke-opacity='.055' stroke-width='1'%3E%3Cpath d='M24 1h48l24 41-24 41H24L0 42Z'/%3E%3Cpath d='M96-41h48l24 41-24 41H96L72 0Z'/%3E%3Cpath d='M96 43h48l24 41-24 41H96L72 84Z'/%3E%3C/g%3E%3C/svg%3E");
 }
 
@@ -325,8 +341,8 @@ input:focus-visible {
 .feature-cell {
   position: absolute;
   width: clamp(170px, 14vw, 220px);
-  aspect-ratio: 1.13;
-  clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%);
+  aspect-ratio: 1.1547;
+  clip-path: var(--comb-clip);
   border: 0;
   padding: 28px 26px;
   background: var(--ink);
@@ -380,9 +396,9 @@ input:focus-visible {
 
 .feature-signal {
   margin-top: 12px;
-  color: rgba(17, 18, 15, 0.58);
-  font: 800 9px/1 var(--font-ui);
-  letter-spacing: 0.12em;
+  color: rgba(17, 18, 15, 0.68);
+  font: 800 11px/1.1 var(--font-ui);
+  letter-spacing: 0.09em;
   text-transform: uppercase;
 }
 
@@ -528,6 +544,15 @@ input:focus-visible {
   letter-spacing: -0.025em;
 }
 
+.search-box:focus-within {
+  outline: 4px solid var(--blue);
+  outline-offset: 3px;
+}
+
+.search-box input:focus-visible {
+  outline: 0;
+}
+
 .search-box input::placeholder {
   color: rgba(17, 18, 15, 0.58);
 }
@@ -565,6 +590,10 @@ input:focus-visible {
   color: var(--yellow);
 }
 
+.filter-hint {
+  display: none;
+}
+
 .results-line {
   max-width: var(--maxw);
   margin: 42px auto 18px;
@@ -591,6 +620,7 @@ input:focus-visible {
   overflow: hidden;
   min-width: 0;
   min-height: 290px;
+  aspect-ratio: 1.5;
   /* Two thirds of the 33 cards are offscreen at first paint and each one
      carries a clip-path plus a nested overflow context. Skip their layout
      and paint until they scroll near. */
@@ -603,7 +633,7 @@ input:focus-visible {
   font: inherit;
   text-align: left;
   text-decoration: none;
-  clip-path: polygon(7% 0, 93% 0, 100% 50%, 93% 100%, 7% 100%, 0 50%);
+  clip-path: var(--comb-card-clip);
   cursor: pointer;
   transition:
     background 180ms ease,
@@ -615,7 +645,7 @@ input:focus-visible {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  padding: clamp(30px, 2.6vw, 48px);
+  padding: clamp(30px, 2.6vw, 48px) clamp(58px, 6.6vw, 96px);
   background: var(--white);
   clip-path: inherit;
   display: flex;
@@ -636,6 +666,23 @@ input:focus-visible {
   border: 1px solid var(--ink);
   font: 900 9px/1 var(--font-ui);
   letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+}
+
+.card-category {
+  width: fit-content;
+  padding: 7px 10px;
+  border: 1px solid rgba(17, 18, 15, 0.55);
+  background: var(--paper);
+  font: 900 9px/1 var(--font-ui);
+  letter-spacing: 0.09em;
   text-transform: uppercase;
 }
 
@@ -708,6 +755,13 @@ input:focus-visible {
   background: var(--blue);
   color: var(--white);
   border-block: var(--line);
+}
+
+.manifesto a:focus-visible,
+.manifesto button:focus-visible,
+.list-hive a:focus-visible,
+.list-hive button:focus-visible {
+  outline-color: var(--yellow);
 }
 
 .manifesto > .section-index,
@@ -839,7 +893,7 @@ input:focus-visible {
   width: 260px;
   aspect-ratio: 1.13;
   border: 2px solid var(--yellow);
-  clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%);
+  clip-path: var(--comb-clip);
 }
 
 .cta-comb span:nth-child(1) {
@@ -1002,11 +1056,9 @@ footer {
     position: relative;
     width: auto;
     inset: auto;
-    aspect-ratio: 1.12;
+    aspect-ratio: 1.1547;
     padding: clamp(18px, 4vw, 28px) clamp(24px, 6vw, 34px);
-    /* Blunter points than the desktop collage: at grid widths the sharp 25%
-       corners eat into the label. */
-    clip-path: polygon(14% 0, 86% 0, 100% 50%, 86% 100%, 14% 100%, 0 50%);
+    clip-path: var(--comb-clip);
   }
 
   .feature-name {
@@ -1099,19 +1151,33 @@ footer {
     width: 100%;
   }
 
-  /* Squat cells: at 1.12 the comb was 152px tall for 62px of content. */
+  /* Discovery is the primary mobile job; listing remains available, but the
+     route into the directory gets the stronger treatment and first position. */
+  .hero-actions .button-ghost {
+    order: -1;
+    background: var(--ink);
+    color: var(--white);
+  }
+
+  .hero-actions .button-dark {
+    background: transparent;
+    color: var(--ink);
+  }
+
+  /* Keep the same regular-hex silhouette at every breakpoint. Compact type and
+     spacing make the 2×2 cluster fit without flattening its cells. */
   .feature-cell,
   .feature-cell-1,
   .feature-cell-2,
   .feature-cell-3,
   .feature-cell-4 {
-    aspect-ratio: 1.4;
-    padding: 16px 22px;
+    aspect-ratio: 1.1547;
+    padding: 14px clamp(20px, 7vw, 28px);
   }
 
   .feature-icon {
-    margin-bottom: 8px;
-    font-size: 22px;
+    margin-bottom: 5px;
+    font-size: 20px;
   }
 
   .feature-name {
@@ -1120,6 +1186,9 @@ footer {
 
   .feature-signal {
     margin-top: 6px;
+    font-size: 11px;
+    line-height: 1.15;
+    letter-spacing: 0.07em;
   }
 
   .buzz-ticker {
@@ -1131,20 +1200,21 @@ footer {
     font-size: 14px;
   }
 
-  /* The search box and filters follow you down a 30-card list instead of
-     stranding you eight screens from the controls. */
+  /* Only the useful control follows the long result list. `display: contents`
+     lets the search stick to the directory instead of being trapped by the
+     short tools wrapper; category chips remain in normal document flow. */
   .directory-tools {
-    position: sticky;
-    top: 0;
-    z-index: 6;
-    padding: 10px;
-    box-shadow: 4px 4px 0 var(--ink);
+    display: contents;
   }
 
   .search-box {
+    position: sticky;
+    top: 0;
+    z-index: 6;
     height: 52px;
     gap: 10px;
     padding: 0 12px;
+    box-shadow: 4px 4px 0 var(--ink);
   }
 
   .search-box > span:first-child {
@@ -1161,12 +1231,25 @@ footer {
 
   /* One swipeable row of chips rather than two stacked rows of buttons. */
   .filters {
-    margin-top: 10px;
+    margin-top: 12px;
     gap: 8px;
     flex-wrap: nowrap;
     overflow-x: auto;
     scrollbar-width: none;
     overscroll-behavior-x: contain;
+    padding-right: 42px;
+    -webkit-mask-image: linear-gradient(
+      to right,
+      #000 0,
+      #000 calc(100% - 44px),
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      to right,
+      #000 0,
+      #000 calc(100% - 44px),
+      transparent 100%
+    );
   }
 
   .filters::-webkit-scrollbar {
@@ -1179,6 +1262,16 @@ footer {
     font-size: 11px;
   }
 
+  .filter-hint {
+    display: block;
+    margin-top: 7px;
+    color: rgba(17, 18, 15, 0.65);
+    font: 800 9px/1 var(--font-ui);
+    letter-spacing: 0.08em;
+    text-align: right;
+    text-transform: uppercase;
+  }
+
   .results-line {
     margin-top: 26px;
   }
@@ -1187,28 +1280,35 @@ footer {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  /* Content-height cards. min-height: 290px left ~95px of dead space in every
-     one of them, which is three extra screens of scrolling over 32 cards. */
+  /* Compact elongated hexagons preserve 120° corners without turning 34
+     results into a wall of full-size regular cells. */
   .community-card {
-    min-height: 0;
-    contain-intrinsic-size: auto 210px;
-    clip-path: polygon(4% 0, 96% 0, 100% 50%, 96% 100%, 4% 100%, 0 50%);
+    min-height: 206px;
+    aspect-ratio: 1.5;
+    contain-intrinsic-size: auto 220px;
+    clip-path: var(--comb-card-clip);
   }
 
   .community-card-inner {
-    padding: 26px 22px;
-    gap: 10px;
+    padding: 22px clamp(52px, 17vw, 66px);
+    gap: 8px;
   }
 
   .card-description {
     display: -webkit-box;
     -webkit-box-orient: vertical;
-    -webkit-line-clamp: 3;
+    -webkit-line-clamp: 2;
     overflow: hidden;
+    font-size: 14px;
+    line-height: 1.35;
   }
 
   .card-open {
-    margin-top: 4px;
+    margin-top: 2px;
+  }
+
+  .card-title {
+    font-size: clamp(23px, 7.5vw, 30px);
   }
 
   .manifesto h2 em {
@@ -1237,7 +1337,7 @@ footer {
   }
 
   .feature-cell {
-    padding: 20px 16px;
+    padding: 14px 20px;
   }
 
   .feature-icon {
@@ -1250,9 +1350,9 @@ footer {
   }
 
   .feature-signal {
-    margin-top: 8px;
-    font-size: 8px;
-    letter-spacing: 0.09em;
+    margin-top: 6px;
+    font-size: 11px;
+    letter-spacing: 0.06em;
   }
 
 }

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 const configuredSiteUrl =
@@ -43,11 +43,13 @@ export const metadata: Metadata = {
   title: "buzzdir — publicly shared Buzz communities",
   description,
   referrer: "strict-origin-when-cross-origin",
+  alternates: { canonical: "./" },
   icons: { icon: "./favicon.svg", shortcut: "./favicon.svg" },
   openGraph: {
     title: "buzzdir",
     description,
     type: "website",
+    url: "./",
     images: [
       {
         url: "./og.png",
@@ -63,6 +65,10 @@ export const metadata: Metadata = {
     description,
     images: ["./og.png"],
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#f7ff00",
 };
 
 export default function RootLayout({

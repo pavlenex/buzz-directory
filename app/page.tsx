@@ -44,8 +44,11 @@ function CommunityCard({ community }: { community: Community }) {
       title={`Open ${community.name} in Buzz`}
     >
       <span className="community-card-inner">
-        <span className={`card-access card-access-${community.access}`}>
-          {accessLabel(community)}
+        <span className="card-meta">
+          <span className={`card-access card-access-${community.access}`}>
+            {accessLabel(community)}
+          </span>
+          <span className="card-category">{community.category}</span>
         </span>
         <span className="card-title">{community.name}</span>
         <span className="card-description">{community.description}</span>
@@ -194,7 +197,7 @@ export default function Home() {
               value={query}
               onChange={(event) => setQuery(event.target.value)}
             />
-            <kbd>TYPE</kbd>
+            <kbd aria-hidden="true">TYPE</kbd>
           </label>
           <div className="filters" aria-label="Filter by category">
             {categories.map((item) => (
@@ -209,11 +212,15 @@ export default function Home() {
               </button>
             ))}
           </div>
+          <span className="filter-hint" aria-hidden="true">
+            Swipe for more filters →
+          </span>
         </div>
 
         <div className="results-line">
-          <span>
-            Showing <strong>{results.length}</strong> hives
+          <span aria-live="polite" aria-atomic="true">
+            Showing <strong>{results.length}</strong>{" "}
+            {results.length === 1 ? "hive" : "hives"}
           </span>
           <span>
             Sourced from public X shares · click a comb to open it in Buzz

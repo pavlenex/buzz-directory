@@ -74,6 +74,13 @@ type Anchor = {
   weight: number;
 };
 
+type ExclusionZone = {
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
+};
+
 type Bee = {
   x: number;
   y: number;
@@ -133,6 +140,7 @@ export function createBeeField(host: HTMLElement): BeeField {
   let viewHeight = window.innerHeight;
 
   let anchors: Anchor[] = [];
+  let exclusionZones: ExclusionZone[] = [];
   let anchorTotalWeight = 0;
   const bees: Bee[] = [];
   /** Bees beyond this index are asleep - the adaptive quality valve. */
@@ -185,6 +193,42 @@ export function createBeeField(host: HTMLElement): BeeField {
 
     anchors = next;
     anchorTotalWeight = next.reduce((sum, anchor) => sum + anchor.weight, 0);
+
+    // Keep the swarm in the negative space around copy and controls. This is
+    // especially important on phones, where the gutters are barely bee-wide,
+    // but it also prevents desktop bees from obscuring labels mid-flight.
+    exclusionZones = [];
+    const protectedElements = document.querySelectorAll<HTMLElement>(
+      [
+        ".hero-copy",
+        ".featured-cluster",
+        ".buzz-ticker",
+        ".section-heading",
+        ".search-box",
+        ".filters",
+        ".results-line",
+        ".community-card-inner",
+        ".empty-state",
+        ".manifesto > .section-index",
+        ".manifesto > h2",
+        ".manifesto-lede",
+        ".manifesto-grid",
+        ".list-hive > div:not(.cta-comb)",
+        ".list-hive > .button",
+        "footer",
+      ].join(","),
+    );
+
+    for (const element of protectedElements) {
+      const rect = element.getBoundingClientRect();
+      const padding = coarse.matches ? 6 : 10;
+      exclusionZones.push({
+        left: rect.left + scrollX - padding,
+        right: rect.right + scrollX + padding,
+        top: rect.top + scrollY - padding,
+        bottom: rect.bottom + scrollY + padding,
+      });
+    }
   }
 
   function pickWeightedAnchor() {
@@ -205,10 +249,10 @@ export function createBeeField(host: HTMLElement): BeeField {
     );
     const area = viewWidth * docHeight;
     let count = Math.round(clamp(area / 135_000, 26, 110));
-    if (coarse.matches) count = Math.round(count * 0.5);
+    if (coarse.matches) count = Math.round(count * 0.32);
     const cores = navigator.hardwareConcurrency ?? 8;
     if (cores <= 4) count = Math.round(count * 0.6);
-    return Math.max(count, 16);
+    return Math.max(count, coarse.matches ? 8 : 16);
   }
 
   /** Pick the next point in the air for this bee to hold. */
@@ -486,6 +530,20 @@ export function createBeeField(host: HTMLElement): BeeField {
       ) {
         continue;
       }
+
+      let overlapsContent = false;
+      for (const zone of exclusionZones) {
+        if (
+          bee.x >= zone.left &&
+          bee.x <= zone.right &&
+          bee.y >= zone.top &&
+          bee.y <= zone.bottom
+        ) {
+          overlapsContent = true;
+          break;
+        }
+      }
+      if (overlapsContent) continue;
 
       const frame =
         bee.state === LANDED
