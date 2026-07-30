@@ -8,12 +8,9 @@ import {
   type Community,
 } from "./communities";
 
-// TODO(pav): swap these two for the real values. A test fails while either
-// still says REPLACE-ME, because github.com/REPLACE-ME is an unclaimed
-// namespace anyone could register and point at the "View the source" button.
-const GITHUB_URL = "https://github.com/REPLACE-ME/buzz-directory";
+const GITHUB_URL = "https://github.com/pavlenex/buzz-directory";
 const BUZZDIR_NAME = "buzzdir";
-const BUZZDIR_RELAY = "wss://REPLACE-ME.example";
+const BUZZDIR_RELAY = "wss://flint.communities.buzz.xyz";
 
 type FeaturedCommunity = Community & {
   featured: NonNullable<Community["featured"]>;
@@ -67,16 +64,22 @@ export default function Home() {
 
   const results = useMemo(() => {
     const normalized = query.trim().toLowerCase();
-    return communities.filter((community) => {
-      const matchesCategory =
-        category === "All" || community.category === category;
-      const matchesQuery =
-        !normalized ||
-        `${community.name} ${community.description} ${community.category} ${community.relay}`
-          .toLowerCase()
-          .includes(normalized);
-      return matchesCategory && matchesQuery;
-    });
+    return communities
+      .filter((community) => {
+        const matchesCategory =
+          category === "All" || community.category === category;
+        const matchesQuery =
+          !normalized ||
+          `${community.name} ${community.description} ${community.category} ${community.relay}`
+            .toLowerCase()
+            .includes(normalized);
+        return matchesCategory && matchesQuery;
+      })
+      // Directory grid is always A–Z; featured hero order is independent.
+      .slice()
+      .sort((a, b) =>
+        a.name.localeCompare(b.name, "en", { sensitivity: "base" }),
+      );
   }, [category, query]);
 
   const showNotice = (message: string) => {

@@ -54,8 +54,10 @@ test("exports the buzzdir catalog for static hosting", async () => {
     relay: decodeURIComponent(relay),
     name: decodeURIComponent(name),
   }));
-  assert.equal(deepLinks.length, 38);
-  assert.equal(new Set(deepLinks.map(({ relay }) => relay)).size, 33);
+  // 34 community cards + 4 featured cells + 2 buzzdir CTAs (manifesto + footer).
+  assert.equal(deepLinks.length, 40);
+  // 34 catalog relays + 1 buzzdir relay.
+  assert.equal(new Set(deepLinks.map(({ relay }) => relay)).size, 35);
   assert.ok(
     deepLinks.every(
       ({ relay, name }) => relay.startsWith("wss://") && name.length > 0,
@@ -234,8 +236,29 @@ test("catalog and deployment contract", async () => {
   const relays = [...communityData.matchAll(/relay: "(wss:\/\/[^"]+)"/g)].map(
     ([, relay]) => relay,
   );
-  assert.equal(relays.length, 32);
-  assert.equal(new Set(relays).size, 32);
+  assert.equal(relays.length, 34);
+  assert.equal(new Set(relays).size, 34);
+  assert.match(communityData, /name: "meshllm"/);
+  assert.match(communityData, /name: "presidiobitcoin"/);
+  // Access legend: /invite/ share → public; bare wss → invite.
+  assert.match(
+    communityData,
+    /name: "Cashu"[\s\S]{0,200}access: "invite"/,
+  );
+  assert.match(
+    communityData,
+    /name: "bitcoiners"[\s\S]{0,200}access: "public"/,
+  );
+  assert.match(
+    communityData,
+    /name: "meshllm"[\s\S]{0,200}access: "invite"/,
+  );
+  assert.match(
+    communityData,
+    /name: "presidiobitcoin"[\s\S]{0,200}access: "invite"/,
+  );
+  // Directory grid sorts A–Z; featured hero order stays independent.
+  assert.match(page, /localeCompare/);
   assert.ok(relays.every((relay) => relay.startsWith("wss://")));
   assert.equal([...communityData.matchAll(/name: "creatormagic"/g)].length, 1);
   assert.match(
