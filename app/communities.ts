@@ -50,6 +50,7 @@ export type Community = {
  * - Direct X add: virtualoranges (relay only)
  * - GitHub issue #5: Los Angeles Buzzers (relay only)
  * - GitHub issue #6: ProductClank (relay only)
+ * - GitHub issue #8: Wailyn MEGACORP (relay only)
  */
 export const communities: readonly Community[] = [
   // --- Featured (hero order; not re-sorted with the directory grid) ---
@@ -147,8 +148,6 @@ export const communities: readonly Community[] = [
       "Devin builders coordinating agentic development work on Buzz.",
     category: "Builders",
     relay: "wss://devin-builders.communities.buzz.xyz",
-    inviteUrl:
-      "https://devin-builders.communities.buzz.xyz/invite/eyJjIjoiMzYxYTk2NWEtMTc4My00OGQ1LWE1MWMtNGQyYTU3YzhjMDdkIiwiciI6Im1lbWJlciIsImUiOjE3ODU0OTg5MTksIm4iOiJQY1ZoS1BQM056Uy1qMDlVNDc1THZ3In0.DBS1VEQHVKFqLYE-6B2Qx_9CBaQv0jdlPQuXa5v0Ooc",
   },
   {
     name: "dgx-spark-gb10",
@@ -364,5 +363,12 @@ export const communities: readonly Community[] = [
       "AI automation builders working with Hermes Agent, Claude Code, robotics, and content workflows.",
     category: "Builders",
     relay: "wss://virtualoranges.communities.buzz.xyz",
+  },
+  {
+    name: "Wailyn MEGACORP",
+    description:
+      "Technology-optimist community for developers and creators, with AI alpha channels.",
+    category: "Builders",
+    relay: "wss://buzz.megacorp.club",
   },
 ];

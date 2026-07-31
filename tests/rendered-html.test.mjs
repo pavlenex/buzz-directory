@@ -54,6 +54,7 @@ test("exports the buzzdir catalog for static hosting", async () => {
     "Virtual Oranges",
     "Los Angeles Buzzers",
     "ProductClank",
+    "Wailyn MEGACORP",
   ]) {
     assert.match(html, new RegExp(name));
   }
@@ -75,7 +76,7 @@ test("exports the buzzdir catalog for static hosting", async () => {
       /<a class="community-card" href="([^"]+)"[\s\S]*?<span class="card-access card-access-(public|invite)">/g,
     ),
   ];
-  assert.equal(cards.length, 40);
+  assert.equal(cards.length, 41);
   for (const [, href, access] of cards) {
     if (access === "public") {
       assert.match(href, /^https:\/\//);
@@ -126,7 +127,7 @@ test("exports the buzzdir catalog for static hosting", async () => {
 
   assert.ok(addLinks.length >= 19);
   assert.ok(inviteLinks.length >= 16);
-  assert.equal(new Set(inviteLinks).size, 16);
+  assert.equal(new Set(inviteLinks).size, 15);
   assert.ok(
     addLinks.every(
       ({ relay, name }) => relay.startsWith("wss://") && name.length > 0,
@@ -155,6 +156,13 @@ test("exports the buzzdir catalog for static hosting", async () => {
       ({ name, relay }) =>
         name === "ProductClank" &&
         relay === "wss://productclank.communities.buzz.xyz",
+    ),
+  );
+  assert.ok(
+    addLinks.some(
+      ({ name, relay }) =>
+        name === "Wailyn MEGACORP" &&
+        relay === "wss://buzz.megacorp.club",
     ),
   );
   assert.ok(
@@ -439,10 +447,10 @@ test("catalog and deployment contract", async () => {
   const publicUrls = [
     ...communityData.matchAll(/publicUrl:\s*\n?\s*"(https:\/\/[^"]+)"/g),
   ].map(([, url]) => url);
-  assert.equal(relays.length, 40);
-  assert.equal(new Set(relays).size, 40);
-  assert.equal(inviteUrls.length, 16);
-  assert.equal(new Set(inviteUrls).size, 16);
+  assert.equal(relays.length, 41);
+  assert.equal(new Set(relays).size, 41);
+  assert.equal(inviteUrls.length, 15);
+  assert.equal(new Set(inviteUrls).size, 15);
   assert.ok(inviteUrls.every((url) => url.includes("/invite/")));
   assert.deepEqual(publicUrls, ["https://buzz.cashu.space"]);
   assert.match(communityData, /name: "meshllm"/);
@@ -461,6 +469,10 @@ test("catalog and deployment contract", async () => {
   assert.match(
     communityData,
     /name: "ProductClank"[\s\S]{0,320}category: "GTM"[\s\S]{0,160}relay: "wss:\/\/productclank\.communities\.buzz\.xyz"/,
+  );
+  assert.match(
+    communityData,
+    /name: "Wailyn MEGACORP"[\s\S]{0,320}category: "Builders"[\s\S]{0,160}relay: "wss:\/\/buzz\.megacorp\.club"/,
   );
   // inviteUrl itself is the source of truth. There is no duplicate access flag.
   assert.doesNotMatch(communityData, /CommunityAccess|access:/);
