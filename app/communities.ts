@@ -49,6 +49,7 @@ export type Community = {
  * - Owner add: meshllm, presidiobitcoin (relay only)
  * - Direct X add: virtualoranges (relay only)
  * - GitHub issue #5: Los Angeles Buzzers (relay only)
+ * - GitHub issue #6: ProductClank (relay only)
  */
 export const communities: readonly Community[] = [
   // --- Featured (hero order; not re-sorted with the directory grid) ---
@@ -193,11 +194,9 @@ export const communities: readonly Community[] = [
   {
     name: "gtmelite",
     description:
-      "GTM elite, a follow-on growth community shared with invite links.",
+      "GTM elite, a follow-on growth community shared publicly on Buzz.",
     category: "GTM",
     relay: "wss://gtmelite.communities.buzz.xyz",
-    inviteUrl:
-      "https://gtmelite.communities.buzz.xyz/invite/eyJjIjoiYTIxMjgzYjQtYmM5MS00YjJjLWFkNjYtYzUyNzRjMGY2MzJjIiwiciI6Im1lbWJlciIsImUiOjE3ODU0Nzc1NzgsIm4iOiIwRC1WYWFKZ0ZXLU4zdWRZV1FwX3BRIn0.9nYN2hRODA85FwDKEoXWVNcb9OA1nI0ixrxMyD4aQsg",
   },
   {
     name: "hashie",
@@ -293,6 +292,13 @@ export const communities: readonly Community[] = [
       "Presidio Bitcoin community with an owner-shared relay and no shared invite URL.",
     category: "Bitcoin",
     relay: "wss://presidiobitcoin.communities.buzz.xyz",
+  },
+  {
+    name: "ProductClank",
+    description:
+      "Growth campaigns for hives and the products they build; admins and their agents coordinate distribution.",
+    category: "GTM",
+    relay: "wss://productclank.communities.buzz.xyz",
   },
   {
     name: "romeo-and-juliet",
