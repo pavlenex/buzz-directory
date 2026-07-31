@@ -99,6 +99,10 @@ test("exports the buzzdir catalog for static hosting", async () => {
       'href="https://creatormagic.communities.buzz.xyz/invite/',
     ),
   );
+  assert.match(
+    html,
+    /<a class="community-card" href="https:\/\/presidiobitcoin\.communities\.buzz\.xyz\/invite\/v2\.TLy7til9nYRLANrTh2Q7prJi9yBU7zyDwYuHf1tE-tA"[\s\S]*?<span class="card-access card-access-public">Public/,
+  );
   assert.doesNotMatch(html, /href="buzz:\/\/join\?/);
   assert.doesNotMatch(html, /href="wss:\/\//);
   assert.doesNotMatch(
@@ -122,7 +126,7 @@ test("exports the buzzdir catalog for static hosting", async () => {
 
   assert.ok(addLinks.length >= 19);
   assert.ok(inviteLinks.length >= 16);
-  assert.equal(new Set(inviteLinks).size, 15);
+  assert.equal(new Set(inviteLinks).size, 16);
   assert.ok(
     addLinks.every(
       ({ relay, name }) => relay.startsWith("wss://") && name.length > 0,
@@ -437,12 +441,15 @@ test("catalog and deployment contract", async () => {
   ].map(([, url]) => url);
   assert.equal(relays.length, 39);
   assert.equal(new Set(relays).size, 39);
-  assert.equal(inviteUrls.length, 15);
-  assert.equal(new Set(inviteUrls).size, 15);
+  assert.equal(inviteUrls.length, 16);
+  assert.equal(new Set(inviteUrls).size, 16);
   assert.ok(inviteUrls.every((url) => url.includes("/invite/")));
   assert.deepEqual(publicUrls, ["https://buzz.cashu.space"]);
   assert.match(communityData, /name: "meshllm"/);
-  assert.match(communityData, /name: "presidiobitcoin"/);
+  assert.match(
+    communityData,
+    /name: "presidiobitcoin"[\s\S]{0,320}inviteUrl:\s*"https:\/\/presidiobitcoin\.communities\.buzz\.xyz\/invite\/v2\.TLy7til9nYRLANrTh2Q7prJi9yBU7zyDwYuHf1tE-tA"/,
+  );
   assert.match(
     communityData,
     /name: "Virtual Oranges"[\s\S]{0,320}relay: "wss:\/\/virtualoranges\.communities\.buzz\.xyz"/,

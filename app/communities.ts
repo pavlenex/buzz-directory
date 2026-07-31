@@ -46,7 +46,7 @@ export type Community = {
  * Sources:
  * - RESEARCH/BUZZ_COMMUNITIES_DIRECTORY_X_CRAWL_2026_07_30.md
  * - RESEARCH/BUZZ_COMMUNITIES_INVITE_URLS_X_CRAWL_2026_07_30.md
- * - Owner add: meshllm, presidiobitcoin (relay only)
+ * - Owner add: meshllm (relay only), presidiobitcoin (public invite)
  * - Direct X add: virtualoranges (relay only)
  * - GitHub issue #5: Los Angeles Buzzers (relay only)
  * - GitHub issue #6: ProductClank (relay only)
@@ -289,9 +289,11 @@ export const communities: readonly Community[] = [
   {
     name: "presidiobitcoin",
     description:
-      "Presidio Bitcoin community with an owner-shared relay and no shared invite URL.",
+      "Presidio Bitcoin community with a publicly shared invite.",
     category: "Bitcoin",
     relay: "wss://presidiobitcoin.communities.buzz.xyz",
+    inviteUrl:
+      "https://presidiobitcoin.communities.buzz.xyz/invite/v2.TLy7til9nYRLANrTh2Q7prJi9yBU7zyDwYuHf1tE-tA",
   },
   {
     name: "ProductClank",
