@@ -319,6 +319,13 @@ export const communities: readonly Community[] = [
     relay: "wss://sec.communities.buzz.xyz",
   },
   {
+    name: "Silverback",
+    description:
+      "Open-source collective maintaining unglamorous infrastructure, collaborating with agents on Buzz.",
+    category: "Builders",
+    relay: "wss://silverback.hedwig.sh",
+  },
+  {
     name: "tech",
     description:
       "Tech hive found in the invite-pass crawl (not in the first bare-wss pass).",

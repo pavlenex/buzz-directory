@@ -75,7 +75,7 @@ test("exports the buzzdir catalog for static hosting", async () => {
       /<a class="community-card" href="([^"]+)"[\s\S]*?<span class="card-access card-access-(public|invite)">/g,
     ),
   ];
-  assert.equal(cards.length, 39);
+  assert.equal(cards.length, 40);
   for (const [, href, access] of cards) {
     if (access === "public") {
       assert.match(href, /^https:\/\//);
@@ -439,8 +439,8 @@ test("catalog and deployment contract", async () => {
   const publicUrls = [
     ...communityData.matchAll(/publicUrl:\s*\n?\s*"(https:\/\/[^"]+)"/g),
   ].map(([, url]) => url);
-  assert.equal(relays.length, 39);
-  assert.equal(new Set(relays).size, 39);
+  assert.equal(relays.length, 40);
+  assert.equal(new Set(relays).size, 40);
   assert.equal(inviteUrls.length, 16);
   assert.equal(new Set(inviteUrls).size, 16);
   assert.ok(inviteUrls.every((url) => url.includes("/invite/")));
