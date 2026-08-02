@@ -51,6 +51,7 @@ export type Community = {
  * - GitHub issue #5: Los Angeles Buzzers (relay only)
  * - GitHub issue #6: ProductClank (relay only)
  * - GitHub issue #8: Wailyn MEGACORP (relay only)
+ * - GitHub issue #9: nearbuilders (relay only)
  */
 export const communities: readonly Community[] = [
   // --- Featured (hero order; not re-sorted with the directory grid) ---
@@ -269,6 +270,12 @@ export const communities: readonly Community[] = [
       "Monero hive with explicit open-join instructions: paste the relay into Add Community.",
     category: "Privacy",
     relay: "wss://monero.communities.buzz.xyz",
+  },
+  {
+    name: "nearbuilders",
+    description: "Builders on NEAR Protocol.",
+    category: "Builders",
+    relay: "wss://nearbuilders.communities.buzz.xyz",
   },
   {
     name: "oleiros",
