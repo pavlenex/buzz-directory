@@ -105,6 +105,10 @@ test("exports the buzzdir catalog for static hosting", async () => {
     html,
     /<a class="community-card" href="https:\/\/presidiobitcoin\.communities\.buzz\.xyz\/invite\/v2\.TLy7til9nYRLANrTh2Q7prJi9yBU7zyDwYuHf1tE-tA"[\s\S]*?<span class="card-access card-access-public">Public/,
   );
+  assert.match(
+    html,
+    /<a class="community-card" href="https:\/\/meshllm\.communities\.buzz\.xyz\/invite\/v2\.snrLPAfXbJqLeUs4xZObggIjTXGAElp5PSjn0DsIWt0"[\s\S]*?<span class="card-access card-access-public">Public/,
+  );
   assert.doesNotMatch(html, /href="buzz:\/\/join\?/);
   assert.doesNotMatch(html, /href="wss:\/\//);
   assert.doesNotMatch(
@@ -128,7 +132,7 @@ test("exports the buzzdir catalog for static hosting", async () => {
 
   assert.ok(addLinks.length >= 20);
   assert.ok(inviteLinks.length >= 16);
-  assert.equal(new Set(inviteLinks).size, 15);
+  assert.equal(new Set(inviteLinks).size, 16);
   assert.ok(
     addLinks.every(
       ({ relay, name }) => relay.startsWith("wss://") && name.length > 0,
@@ -137,6 +141,7 @@ test("exports the buzzdir catalog for static hosting", async () => {
   // Relay-only entries must never be wired as a join without an invite.
   assert.ok(!addLinks.some(({ name }) => name === "bitcoiners"));
   assert.ok(!addLinks.some(({ name }) => name === "Cashu"));
+  assert.ok(!addLinks.some(({ name }) => name === "meshllm"));
   assert.ok(addLinks.some(({ name }) => name === "monero"));
   assert.ok(
     addLinks.some(
@@ -457,11 +462,14 @@ test("catalog and deployment contract", async () => {
   ].map(([, url]) => url);
   assert.equal(relays.length, 42);
   assert.equal(new Set(relays).size, 42);
-  assert.equal(inviteUrls.length, 15);
-  assert.equal(new Set(inviteUrls).size, 15);
+  assert.equal(inviteUrls.length, 16);
+  assert.equal(new Set(inviteUrls).size, 16);
   assert.ok(inviteUrls.every((url) => url.includes("/invite/")));
   assert.deepEqual(publicUrls, ["https://buzz.cashu.space"]);
-  assert.match(communityData, /name: "meshllm"/);
+  assert.match(
+    communityData,
+    /name: "meshllm"[\s\S]{0,320}inviteUrl:\s*"https:\/\/meshllm\.communities\.buzz\.xyz\/invite\/v2\.snrLPAfXbJqLeUs4xZObggIjTXGAElp5PSjn0DsIWt0"/,
+  );
   assert.match(
     communityData,
     /name: "presidiobitcoin"[\s\S]{0,320}inviteUrl:\s*"https:\/\/presidiobitcoin\.communities\.buzz\.xyz\/invite\/v2\.TLy7til9nYRLANrTh2Q7prJi9yBU7zyDwYuHf1tE-tA"/,

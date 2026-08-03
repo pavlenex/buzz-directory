@@ -46,7 +46,7 @@ export type Community = {
  * Sources:
  * - RESEARCH/BUZZ_COMMUNITIES_DIRECTORY_X_CRAWL_2026_07_30.md
  * - RESEARCH/BUZZ_COMMUNITIES_INVITE_URLS_X_CRAWL_2026_07_30.md
- * - Owner add: meshllm (relay only), presidiobitcoin (public invite)
+ * - Owner add: meshllm, presidiobitcoin (public invites)
  * - Direct X add: virtualoranges (relay only)
  * - GitHub issue #5: Los Angeles Buzzers (relay only)
  * - GitHub issue #6: ProductClank (relay only)
@@ -244,9 +244,11 @@ export const communities: readonly Community[] = [
   {
     name: "meshllm",
     description:
-      "MeshLLM community with an owner-shared relay and no shared invite URL.",
+      "MeshLLM community with a publicly shared invite.",
     category: "Labs",
     relay: "wss://meshllm.communities.buzz.xyz",
+    inviteUrl:
+      "https://meshllm.communities.buzz.xyz/invite/v2.snrLPAfXbJqLeUs4xZObggIjTXGAElp5PSjn0DsIWt0",
   },
   {
     name: "midd-relay",
