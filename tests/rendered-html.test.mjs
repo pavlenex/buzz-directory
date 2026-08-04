@@ -430,8 +430,9 @@ test("catalog and deployment contract", async () => {
   assert.match(page, /classifyListingUrl/);
   assert.match(page, /parsed\.pathname[\s\S]*includes\("invite"\)/);
   assert.match(page, /parsed\.protocol === "wss:"/);
-  assert.match(page, /parsed\.protocol === "http:"/);
   assert.match(page, /parsed\.protocol === "https:"/);
+  // Plain http: is rejected — listings must not downgrade to insecure links.
+  assert.doesNotMatch(page, /parsed\.protocol === "http:"/);
   assert.match(page, /Web link \/ redirect/);
   assert.match(page, /LISTING_DESCRIPTION_LIMIT = 140/);
   assert.match(page, /new URL\(`\$\{GITHUB_URL\}\/issues\/new`\)/);
@@ -530,15 +531,19 @@ test("catalog and deployment contract", async () => {
   assert.match(nextConfig, /basePath: pagesBasePath/);
   assert.match(nextConfig, /hasConfiguredBasePath/);
 
+  // Actions are pinned to commit SHAs (supply-chain hardening); the tag is
+  // kept as a trailing comment for readability and Dependabot updates.
   for (const action of [
-    "actions/checkout@v7",
-    "actions/setup-node@v7",
-    "actions/configure-pages@v6",
-    "actions/upload-pages-artifact@v5",
-    "actions/deploy-pages@v5",
+    "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7",
+    "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7",
+    "actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6",
+    "actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5",
+    "actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5",
   ]) {
     assert.match(workflow, new RegExp(action.replace("/", "\\/")));
   }
+  // No unpinned major-version tags may come back.
+  assert.doesNotMatch(workflow, /uses: actions\/[a-z-]+@v\d/);
   assert.match(workflow, /path: out/);
   assert.match(workflow, /steps\.pages\.outputs\.base_path/);
   assert.doesNotMatch(workflow, /vars\.PAGES_BASE_PATH/);

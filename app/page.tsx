@@ -76,7 +76,7 @@ const classifyListingUrl = (value: string): ListingAccess => {
   try {
     const parsed = new URL(normalized);
     if (parsed.protocol === "wss:") return "invite";
-    if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+    if (parsed.protocol === "https:") {
       const hasInvitePath = parsed.pathname
         .toLowerCase()
         .split("/")
@@ -202,7 +202,7 @@ export default function Home() {
 
     if (listingAccess === "empty" || listingAccess === "invalid") {
       setListingError(
-        "Use a wss:// relay, an HTTP(S) community link, or a link containing /invite/.",
+        "Use a wss:// relay, an HTTPS community link, or a link containing /invite/.",
       );
       return;
     }
@@ -586,12 +586,12 @@ export default function Home() {
                 ) : listingAccess === "web" ? (
                   <>
                     <strong>Web link</strong>
-                    <span>HTTP(S) redirect or community host; we&apos;ll review it</span>
+                    <span>HTTPS redirect or community host; we&apos;ll review it</span>
                   </>
                 ) : listingAccess === "invalid" ? (
                   <>
                     <strong>Invalid link</strong>
-                    <span>Use wss://, http://, or https://</span>
+                    <span>Use wss:// or https://</span>
                   </>
                 ) : (
                   <>
