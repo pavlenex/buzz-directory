@@ -91,7 +91,9 @@ test("exports the buzzdir catalog for static hosting", async () => {
     /<a class="community-card-hitbox" href="https:\/\/buzz\.cashu\.space" aria-label="Open Cashu" title="Open Cashu"/,
   );
   assert.match(html, /aria-label="Copy directory link for Cashu"/);
-  assert.equal(html.match(/>Share link ↗<\/button>/g)?.length, cards.length);
+  assert.equal(html.match(/class="card-share"/g)?.length, cards.length);
+  assert.equal(html.match(/data-status="idle"/g)?.length, cards.length);
+  assert.doesNotMatch(html, />Share link ↗<\/button>/);
   // Public cards visit the invite page so policy acceptance can mint the
   // receipt required by relays that enforce a join policy.
   assert.ok(
@@ -261,6 +263,16 @@ test("supports a stable share route for every community", async () => {
   assert.match(page, /shareUrl\.hash = `community-\$\{id\}`/);
   assert.match(page, /navigator\.clipboard\.writeText\(shareUrl\.toString\(\)\)/);
   assert.match(styles, /\.community-card:target/);
+  assert.match(
+    styles,
+    /grid-template-columns: repeat\(auto-fill, minmax\(min\(100%, 360px\), 1fr\)\)/,
+  );
+  assert.match(styles, /\.card-share \{[\s\S]*?margin-left: auto;/);
+  assert.match(styles, /\.community-card \{[\s\S]*?max-width: 440px;/);
+  assert.doesNotMatch(
+    styles,
+    /\.card-share \{[^}]*position: absolute;/,
+  );
 });
 
 test("keeps the swarm off the main thread and out of the DOM", async () => {
@@ -403,7 +415,7 @@ test("keeps the page cheap to ship", async () => {
   assert.match(styles, /\.search-box \{[\s\S]*position: sticky/);
   assert.match(
     styles,
-    /\.bento-comb \{[\s\S]*grid-template-columns: repeat\(4, minmax\(0, 1fr\)\)/,
+    /\.bento-comb \{[\s\S]*grid-template-columns: repeat\(auto-fill, minmax\(min\(100%, 360px\), 1fr\)\)/,
   );
   assert.match(styles, /\.feature-cell-1 \{[\s\S]*top: 25%;[\s\S]*left: 0/);
   assert.match(styles, /\.feature-cell-4 \{[\s\S]*top: 25%;[\s\S]*left: 46%/);

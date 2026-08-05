@@ -116,6 +116,12 @@ function CommunityCard({
   onShare: (community: Community) => void;
 }) {
   const id = communityId(community);
+  const shareLabel =
+    shareStatus === "copied"
+      ? `${community.name} directory link copied`
+      : shareStatus === "ready"
+        ? `${community.name} directory URL is ready in the address bar`
+        : `Copy directory link for ${community.name}`;
 
   return (
     <article
@@ -137,6 +143,26 @@ function CommunityCard({
             {accessLabel(community)}
           </span>
           <span className="card-category">{community.category}</span>
+          <button
+            className="card-share"
+            type="button"
+            aria-label={shareLabel}
+            aria-live="polite"
+            data-status={shareStatus ?? "idle"}
+            title={shareLabel}
+            onClick={() => onShare(community)}
+          >
+            {shareStatus === "copied" ? (
+              <span aria-hidden="true">✓</span>
+            ) : shareStatus === "ready" ? (
+              <span aria-hidden="true">↗</span>
+            ) : (
+              <svg aria-hidden="true" viewBox="0 0 18 18">
+                <rect x="6" y="2" width="10" height="10" />
+                <rect x="2" y="6" width="10" height="10" />
+              </svg>
+            )}
+          </button>
         </span>
         <span className="card-title">{community.name}</span>
         <span className="card-description">{community.description}</span>
@@ -147,19 +173,6 @@ function CommunityCard({
               ? "Open community ↗"
               : "Open in Buzz ↗"}
         </span>
-        <button
-          className="card-share"
-          type="button"
-          aria-label={`Copy directory link for ${community.name}`}
-          aria-live="polite"
-          onClick={() => onShare(community)}
-        >
-          {shareStatus === "copied"
-            ? "Copied ✓"
-            : shareStatus === "ready"
-              ? "URL ready ↑"
-              : "Share link ↗"}
-        </button>
       </span>
     </article>
   );
