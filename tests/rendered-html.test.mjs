@@ -74,11 +74,12 @@ test("exports the buzzdir catalog for static hosting", async () => {
   assert.match(html, /card-access-invite[^>]*>Invite/);
   const cards = [
     ...html.matchAll(
-      /<a class="community-card" href="([^"]+)"[\s\S]*?<span class="card-access card-access-(public|invite)">/g,
+      /<article class="community-card" id="community-([^"]+)" data-community-id="\1"><a class="community-card-hitbox" href="([^"]+)"[\s\S]*?<span class="card-access card-access-(public|invite)">/g,
     ),
   ];
   assert.equal(cards.length, 48);
-  for (const [, href, access] of cards) {
+  assert.equal(new Set(cards.map(([, id]) => id)).size, cards.length);
+  for (const [, , href, access] of cards) {
     if (access === "public") {
       assert.match(href, /^https:\/\//);
     } else {
@@ -87,8 +88,10 @@ test("exports the buzzdir catalog for static hosting", async () => {
   }
   assert.match(
     html,
-    /<a class="community-card" href="https:\/\/buzz\.cashu\.space" aria-label="Open Cashu" title="Open Cashu"/,
+    /<a class="community-card-hitbox" href="https:\/\/buzz\.cashu\.space" aria-label="Open Cashu" title="Open Cashu"/,
   );
+  assert.match(html, /aria-label="Copy directory link for Cashu"/);
+  assert.equal(html.match(/>Share link ↗<\/button>/g)?.length, cards.length);
   // Public cards visit the invite page so policy acceptance can mint the
   // receipt required by relays that enforce a join policy.
   assert.ok(
@@ -103,11 +106,11 @@ test("exports the buzzdir catalog for static hosting", async () => {
   );
   assert.match(
     html,
-    /<a class="community-card" href="https:\/\/presidiobitcoin\.communities\.buzz\.xyz\/invite\/v2\.TLy7til9nYRLANrTh2Q7prJi9yBU7zyDwYuHf1tE-tA"[\s\S]*?<span class="card-access card-access-public">Public/,
+    /<a class="community-card-hitbox" href="https:\/\/presidiobitcoin\.communities\.buzz\.xyz\/invite\/v2\.TLy7til9nYRLANrTh2Q7prJi9yBU7zyDwYuHf1tE-tA"[\s\S]*?<span class="card-access card-access-public">Public/,
   );
   assert.match(
     html,
-    /<a class="community-card" href="https:\/\/meshllm\.communities\.buzz\.xyz\/invite\/v2\.snrLPAfXbJqLeUs4xZObggIjTXGAElp5PSjn0DsIWt0"[\s\S]*?<span class="card-access card-access-public">Public/,
+    /<a class="community-card-hitbox" href="https:\/\/meshllm\.communities\.buzz\.xyz\/invite\/v2\.snrLPAfXbJqLeUs4xZObggIjTXGAElp5PSjn0DsIWt0"[\s\S]*?<span class="card-access card-access-public">Public/,
   );
   assert.doesNotMatch(html, /href="buzz:\/\/join\?/);
   assert.doesNotMatch(html, /href="wss:\/\//);
@@ -244,6 +247,20 @@ test("exports the buzzdir catalog for static hosting", async () => {
   // tag; check it survived the build.
   assert.match(html, /http-equiv="Content-Security-Policy"/i);
   assert.match(html, /object-src 'none'/);
+});
+
+test("supports a stable share route for every community", async () => {
+  const [page, styles] = await Promise.all([
+    read("app/page.tsx"),
+    read("app/globals.css"),
+  ]);
+
+  assert.match(page, /const COMMUNITY_QUERY_PARAM = "community"/);
+  assert.match(page, /new URLSearchParams\(window\.location\.search\)/);
+  assert.match(page, /searchParams\.set\(COMMUNITY_QUERY_PARAM, id\)/);
+  assert.match(page, /shareUrl\.hash = `community-\$\{id\}`/);
+  assert.match(page, /navigator\.clipboard\.writeText\(shareUrl\.toString\(\)\)/);
+  assert.match(styles, /\.community-card:target/);
 });
 
 test("keeps the swarm off the main thread and out of the DOM", async () => {
