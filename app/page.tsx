@@ -16,6 +16,7 @@ import {
 
 const GITHUB_URL = "https://github.com/pavlenex/buzz-directory";
 const BUZZDIR_NAME = "buzzdir";
+const COMMUNITY_QUERY_PARAM = "community";
 const LISTING_DESCRIPTION_LIMIT = 140;
 
 type ListingAccess = "empty" | "public" | "invite" | "web" | "invalid";
@@ -45,6 +46,14 @@ const communityOpenLabel = (community: Community) =>
     : community.publicUrl
       ? `Open ${community.name}`
       : `Open ${community.name} in Buzz`;
+
+const communityId = (community: Pick<Community, "name">) =>
+  community.name
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
 
 // Shared invites must go through their HTTPS landing page. That page collects
 // any required join-policy acceptance and gives Buzz a policy receipt; a raw
@@ -97,14 +106,29 @@ const listingAccessLabel = (access: ListingAccess) => {
   return "Invite required";
 };
 
-function CommunityCard({ community }: { community: Community }) {
+function CommunityCard({
+  community,
+  shareStatus,
+  onShare,
+}: {
+  community: Community;
+  shareStatus: "copied" | "ready" | null;
+  onShare: (community: Community) => void;
+}) {
+  const id = communityId(community);
+
   return (
-    <a
+    <article
       className="community-card"
-      href={communityDeepLink(community)}
-      aria-label={communityOpenLabel(community)}
-      title={communityOpenLabel(community)}
+      id={`community-${id}`}
+      data-community-id={id}
     >
+      <a
+        className="community-card-hitbox"
+        href={communityDeepLink(community)}
+        aria-label={communityOpenLabel(community)}
+        title={communityOpenLabel(community)}
+      />
       <span className="community-card-inner">
         <span className="card-meta">
           <span
@@ -123,14 +147,31 @@ function CommunityCard({ community }: { community: Community }) {
               ? "Open community ↗"
               : "Open in Buzz ↗"}
         </span>
+        <button
+          className="card-share"
+          type="button"
+          aria-label={`Copy directory link for ${community.name}`}
+          aria-live="polite"
+          onClick={() => onShare(community)}
+        >
+          {shareStatus === "copied"
+            ? "Copied ✓"
+            : shareStatus === "ready"
+              ? "URL ready ↑"
+              : "Share link ↗"}
+        </button>
       </span>
-    </a>
+    </article>
   );
 }
 
 export default function Home() {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<(typeof categories)[number]>("All");
+  const [shareFeedback, setShareFeedback] = useState<{
+    id: string;
+    status: "copied" | "ready";
+  } | null>(null);
   const [listingOpen, setListingOpen] = useState(false);
   const [listingTab, setListingTab] = useState<"github" | "buzz">("github");
   const [listingName, setListingName] = useState("");
@@ -145,12 +186,57 @@ export default function Home() {
   );
 
   useEffect(() => {
+    const requestedId = new URLSearchParams(window.location.search).get(
+      COMMUNITY_QUERY_PARAM,
+    );
+    if (!requestedId) return;
+
+    const community = communities.find(
+      (candidate) => communityId(candidate) === requestedId.toLowerCase(),
+    );
+    if (!community) return;
+
+    let scrollFrame: number | undefined;
+    const filterFrame = window.requestAnimationFrame(() => {
+      setQuery(community.name);
+      setCategory("All");
+      scrollFrame = window.requestAnimationFrame(() => {
+        document
+          .getElementById(`community-${communityId(community)}`)
+          ?.scrollIntoView({ block: "center" });
+      });
+    });
+
+    return () => {
+      window.cancelAnimationFrame(filterFrame);
+      if (scrollFrame !== undefined) window.cancelAnimationFrame(scrollFrame);
+    };
+  }, []);
+
+  useEffect(() => {
     const dialog = listingDialogRef.current;
     if (!dialog) return;
 
     if (listingOpen && !dialog.open) dialog.showModal();
     if (!listingOpen && dialog.open) dialog.close();
   }, [listingOpen]);
+
+  const handleCommunityShare = async (community: Community) => {
+    const id = communityId(community);
+    const shareUrl = new URL(window.location.href);
+    shareUrl.search = "";
+    shareUrl.searchParams.set(COMMUNITY_QUERY_PARAM, id);
+    shareUrl.hash = `community-${id}`;
+
+    try {
+      if (!navigator.clipboard) throw new Error("Clipboard unavailable");
+      await navigator.clipboard.writeText(shareUrl.toString());
+      setShareFeedback({ id, status: "copied" });
+    } catch {
+      window.history.replaceState(null, "", shareUrl);
+      setShareFeedback({ id, status: "ready" });
+    }
+  };
 
   const results = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -352,14 +438,23 @@ export default function Home() {
             {results.length === 1 ? "hive" : "hives"}
           </span>
           <span>
-            Sourced from public X shares · click a comb to open it in Buzz
+            Sourced from public X shares · open a hive or copy its directory link
           </span>
         </div>
 
         {results.length > 0 ? (
           <div className="bento-comb">
             {results.map((community) => (
-              <CommunityCard community={community} key={community.name} />
+              <CommunityCard
+                community={community}
+                key={community.name}
+                onShare={handleCommunityShare}
+                shareStatus={
+                  shareFeedback?.id === communityId(community)
+                    ? shareFeedback.status
+                    : null
+                }
+              />
             ))}
           </div>
         ) : (

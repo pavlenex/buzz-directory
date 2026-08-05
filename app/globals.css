@@ -656,8 +656,20 @@ textarea:focus-visible {
     transform 180ms ease;
 }
 
+.community-card-hitbox {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  clip-path: inherit;
+}
+
+.community-card-hitbox:focus-visible {
+  outline-offset: -7px;
+}
+
 .community-card-inner {
   position: relative;
+  z-index: 2;
   width: 100%;
   height: 100%;
   overflow: hidden;
@@ -669,11 +681,18 @@ textarea:focus-visible {
   justify-content: center;
   gap: 7px;
   isolation: isolate;
+  pointer-events: none;
 }
 
-.community-card:hover {
+.community-card:hover,
+.community-card:target {
   background: var(--yellow);
   transform: translateY(-3px);
+}
+
+.community-card:target {
+  background: var(--blue);
+  filter: drop-shadow(7px 7px 0 var(--ink));
 }
 
 .card-access {
@@ -740,6 +759,33 @@ textarea:focus-visible {
   font: 900 10px/1 var(--font-ui);
   letter-spacing: 0.09em;
   text-transform: uppercase;
+}
+
+.card-share {
+  position: absolute;
+  z-index: 3;
+  right: clamp(50px, 4.3vw, 68px);
+  bottom: clamp(18px, 1.4vw, 24px);
+  min-height: 26px;
+  padding: 0 8px;
+  border: 1.5px solid var(--ink);
+  background: var(--yellow);
+  box-shadow: 2px 2px 0 var(--ink);
+  cursor: pointer;
+  pointer-events: auto;
+  font: 900 9px/1 var(--font-ui);
+  letter-spacing: 0.075em;
+  text-transform: uppercase;
+}
+
+.card-share:hover {
+  background: var(--ink);
+  color: var(--yellow);
+}
+
+.card-share:active {
+  box-shadow: none;
+  transform: translate(2px, 2px);
 }
 
 .empty-state {
