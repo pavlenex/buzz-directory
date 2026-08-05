@@ -31,7 +31,7 @@ export type Community = {
 
 /**
  * Admin-advertised Buzz communities discovered on X from 2026-07-16 to
- * 2026-07-30, plus owner-shared relays. Explicit test instances are
+ * 2026-08-05, plus owner-shared relays. Explicit test instances are
  * excluded.
  *
  * Join method:
@@ -46,6 +46,7 @@ export type Community = {
  * Sources:
  * - RESEARCH/BUZZ_COMMUNITIES_DIRECTORY_X_CRAWL_2026_07_30.md
  * - RESEARCH/BUZZ_COMMUNITIES_INVITE_URLS_X_CRAWL_2026_07_30.md
+ * - RESEARCH/BUZZ_COMMUNITIES_X_CRAWL_2026_08_05.md
  * - Owner add: meshllm, presidiobitcoin (public invites)
  * - Direct X add: virtualoranges (relay only)
  * - GitHub issue #5: Los Angeles Buzzers (relay only)
@@ -72,7 +73,7 @@ export const communities: readonly Community[] = [
     category: "Culture",
     relay: "wss://creatormagic.communities.buzz.xyz",
     inviteUrl:
-      "https://creatormagic.communities.buzz.xyz/invite/eyJjIjoiYTczMjczNTMtYzExOS00OWNiLWE4ZjQtNTI3YzY4NmQyMDlkIiwiciI6Im1lbWJlciIsImUiOjE3ODc3NTQ4MTksIm4iOiJOYmZvWm5TSzRlUVpZc1pTSnlHVkx3In0.waEPhDSFQrfaxlxqGCuqkWFxfZiiI-9JpuGKvkI4dUk",
+      "https://creatormagic.communities.buzz.xyz/invite/v2.r1LrcEXOs6uzB5EVVPgLnIUjcDiw3HmjM3byUVxGTjI",
     featured: { icon: "✺", note: "creators" },
   },
   {
@@ -135,6 +136,15 @@ export const communities: readonly Community[] = [
       "https://bitcoinplaintalk.communities.buzz.xyz/invite/eyJjIjoiNjNlNzJkY2YtM2U4ZC00MWViLWEyZTQtNzg2MzVkM2ZlNTdkIiwiciI6Im1lbWJlciIsImUiOjE3ODczOTA4NzksIm4iOiJ0X0R5NVBnNjJ5QlQtbGRjZk54WmFnIn0.MJkUldcUAqn-fV4JF9XN8zOY7qVpO98iHMV0s7Wty_M",
   },
   {
+    name: "Buzzbuild",
+    description:
+      "Builders shipping on Buzz together; public hive advertised via buzzbuild.xyz.",
+    category: "Builders",
+    relay: "wss://buzzbuild.communities.buzz.xyz",
+    inviteUrl:
+      "https://buzzbuild.communities.buzz.xyz/invite/v2.6-AGUNRVGlsJk7JlEPmw09NQuAOCFUmUBvoatGb-AuU",
+  },
+  {
     name: "Cashu",
     description:
       "Ecash builders on the custom buzz.cashu.space host, shared for Add Community.",
@@ -149,6 +159,17 @@ export const communities: readonly Community[] = [
       "Devin builders coordinating agentic development work on Buzz.",
     category: "Builders",
     relay: "wss://devin-builders.communities.buzz.xyz",
+    inviteUrl:
+      "https://devin-builders.communities.buzz.xyz/invite/v2.P4pbHgFK7QTYfqEr5UMPLa13CCsvM3iu8ybhns4fd2o",
+  },
+  {
+    name: "devph",
+    description:
+      "Philippine developers and MVP builders collaborating with agents on Buzz.",
+    category: "Builders",
+    relay: "wss://devph.communities.buzz.xyz",
+    inviteUrl:
+      "https://devph.communities.buzz.xyz/invite/v2.FRCetFoEKa7reduT_e442aWp5XN3sIVTwrqbPbMX_PI",
   },
   {
     name: "dgx-spark-gb10",
@@ -160,10 +181,26 @@ export const communities: readonly Community[] = [
       "https://dgx-spark-gb10.communities.buzz.xyz/invite/v2.vBHTcvwj72KmYqLRiNdhnbDU_GrOb-5qF0N9Xfdb6u4",
   },
   {
+    name: "easyailabs",
+    description:
+      "AI engineers building agent–human workflows together on Buzz.",
+    category: "Builders",
+    relay: "wss://easyailabs.communities.buzz.xyz",
+    inviteUrl:
+      "https://easyailabs.communities.buzz.xyz/invite/v2.ghCDrmTxXp6qraY4NkB2oCple4ix2BKbYXgZpQwwMvc",
+  },
+  {
     name: "eco",
     description: "Eco-minded builders and collaborators gathering on Buzz.",
     category: "Culture",
     relay: "wss://eco.communities.buzz.xyz",
+  },
+  {
+    name: "Einundzwanzig",
+    description:
+      "German Bitcoin association hive on a custom host; paste wss:// for Add Community.",
+    category: "Bitcoin",
+    relay: "wss://buzz.einundzwanzig.space",
   },
   {
     name: "fintech-open-source",
@@ -280,6 +317,15 @@ export const communities: readonly Community[] = [
     relay: "wss://nearbuilders.communities.buzz.xyz",
   },
   {
+    name: "newyork",
+    description:
+      "New York Buzz community; public invite shared on X (no SF people allowed, per founder).",
+    category: "Culture",
+    relay: "wss://newyork.communities.buzz.xyz",
+    inviteUrl:
+      "https://newyork.communities.buzz.xyz/invite/v2.TIu0dDjEZFouh6JR-3RAD2yg91UObVFQOopbf1w9oaE",
+  },
+  {
     name: "oleiros",
     description: "Oleiros local community hive gathering on Buzz.",
     category: "Culture",
@@ -293,6 +339,15 @@ export const communities: readonly Community[] = [
     relay: "wss://openb.communities.buzz.xyz",
     inviteUrl:
       "https://openb.communities.buzz.xyz/invite/eyJjIjoiMjkzMDgxZTYtNTliZi00NmEzLWIzZmMtNjJlNWU1NWFiYjY2IiwiciI6Im1lbWJlciIsImUiOjE3ODc1OTIxNjYsIm4iOiIxenJpaTg1ZXluTlVJbG5NVURQODRnIn0.7ko5blYq32hcVIs0Kx6zFZXzMK6syZqnmcWUFaBNKVI",
+  },
+  {
+    name: "PlotPickle Playhouse",
+    description:
+      "Music and creative playhouse hive started by Ava Iris on Buzz.",
+    category: "Culture",
+    relay: "wss://plotpickleplayhouse.communities.buzz.xyz",
+    inviteUrl:
+      "https://plotpickleplayhouse.communities.buzz.xyz/invite/v2.pjTw3UAGG6wsNzZ6_BUj41i0jKP50W6BmFbfWilA2Js",
   },
   {
     name: "presidiobitcoin",

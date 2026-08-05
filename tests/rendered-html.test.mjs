@@ -77,7 +77,7 @@ test("exports the buzzdir catalog for static hosting", async () => {
       /<a class="community-card" href="([^"]+)"[\s\S]*?<span class="card-access card-access-(public|invite)">/g,
     ),
   ];
-  assert.equal(cards.length, 42);
+  assert.equal(cards.length, 48);
   for (const [, href, access] of cards) {
     if (access === "public") {
       assert.match(href, /^https:\/\//);
@@ -131,8 +131,8 @@ test("exports the buzzdir catalog for static hosting", async () => {
   ].map(([, url]) => url);
 
   assert.ok(addLinks.length >= 20);
-  assert.ok(inviteLinks.length >= 16);
-  assert.equal(new Set(inviteLinks).size, 16);
+  assert.ok(inviteLinks.length >= 22);
+  assert.equal(new Set(inviteLinks).size, 22);
   assert.ok(
     addLinks.every(
       ({ relay, name }) => relay.startsWith("wss://") && name.length > 0,
@@ -461,10 +461,10 @@ test("catalog and deployment contract", async () => {
   const publicUrls = [
     ...communityData.matchAll(/publicUrl:\s*\n?\s*"(https:\/\/[^"]+)"/g),
   ].map(([, url]) => url);
-  assert.equal(relays.length, 42);
-  assert.equal(new Set(relays).size, 42);
-  assert.equal(inviteUrls.length, 16);
-  assert.equal(new Set(inviteUrls).size, 16);
+  assert.equal(relays.length, 48);
+  assert.equal(new Set(relays).size, 48);
+  assert.equal(inviteUrls.length, 22);
+  assert.equal(new Set(inviteUrls).size, 22);
   assert.ok(inviteUrls.every((url) => url.includes("/invite/")));
   assert.deepEqual(publicUrls, ["https://buzz.cashu.space"]);
   assert.match(
@@ -494,6 +494,26 @@ test("catalog and deployment contract", async () => {
   assert.match(
     communityData,
     /name: "nearbuilders"[\s\S]{0,320}category: "Builders"[\s\S]{0,160}relay: "wss:\/\/nearbuilders\.communities\.buzz\.xyz"/,
+  );
+  assert.match(
+    communityData,
+    /name: "newyork"[\s\S]{0,320}inviteUrl:\s*"https:\/\/newyork\.communities\.buzz\.xyz\/invite\/v2\.TIu0dDjEZFouh6JR-3RAD2yg91UObVFQOopbf1w9oaE"/,
+  );
+  assert.match(
+    communityData,
+    /name: "Buzzbuild"[\s\S]{0,320}inviteUrl:\s*"https:\/\/buzzbuild\.communities\.buzz\.xyz\/invite\/v2\.6-AGUNRVGlsJk7JlEPmw09NQuAOCFUmUBvoatGb-AuU"/,
+  );
+  assert.match(
+    communityData,
+    /name: "Einundzwanzig"[\s\S]{0,320}relay: "wss:\/\/buzz\.einundzwanzig\.space"/,
+  );
+  assert.match(
+    communityData,
+    /name: "devin-builders"[\s\S]{0,320}inviteUrl:\s*"https:\/\/devin-builders\.communities\.buzz\.xyz\/invite\/v2\.P4pbHgFK7QTYfqEr5UMPLa13CCsvM3iu8ybhns4fd2o"/,
+  );
+  assert.match(
+    communityData,
+    /name: "creatormagic"[\s\S]{0,320}inviteUrl:\s*"https:\/\/creatormagic\.communities\.buzz\.xyz\/invite\/v2\.r1LrcEXOs6uzB5EVVPgLnIUjcDiw3HmjM3byUVxGTjI"/,
   );
   // inviteUrl itself is the source of truth. There is no duplicate access flag.
   assert.doesNotMatch(communityData, /CommunityAccess|access:/);
