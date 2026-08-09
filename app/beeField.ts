@@ -262,11 +262,14 @@ export function createBeeField(host: HTMLElement): BeeField {
       viewHeight,
     );
     const area = viewWidth * docHeight;
-    let count = Math.round(clamp(area / 91_000, 37, 154));
-    if (coarse.matches) count = Math.round(count * 0.38);
+    // One bee per ~260k document pixels: a garden's worth, not a swarm's.
+    // The old 91k density put a hundred-plus bees on a desktop page, which
+    // overwhelmed the content they were meant to decorate.
+    let count = Math.round(clamp(area / 260_000, 12, 48));
+    if (coarse.matches) count = Math.round(count * 0.45);
     const cores = navigator.hardwareConcurrency ?? 8;
     if (cores <= 4) count = Math.round(count * 0.6);
-    return Math.max(count, coarse.matches ? 10 : 18);
+    return Math.max(count, coarse.matches ? 8 : 14);
   }
 
   /** Pick the next point in the air for this bee to hold. */
@@ -632,7 +635,7 @@ export function createBeeField(host: HTMLElement): BeeField {
     smoothedFrame += (raw - smoothedFrame) * 0.05;
     if (clock - lastQualityCheck > 2.5) {
       lastQualityCheck = clock;
-      const floor = Math.max(14, Math.round(targetCount * 0.35));
+      const floor = Math.max(8, Math.round(targetCount * 0.35));
       if (smoothedFrame > 0.0235 && activeCount > floor) {
         activeCount = Math.max(floor, Math.round(activeCount * 0.78));
       } else if (smoothedFrame < 0.018 && activeCount < targetCount) {

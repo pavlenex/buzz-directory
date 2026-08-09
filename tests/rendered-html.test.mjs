@@ -318,8 +318,8 @@ test("keeps the swarm off the main thread and out of the DOM", async () => {
   assert.match(field, /bobAmount/);
   assert.match(field, /shortestTurn/);
   assert.doesNotMatch(field, /land: true/);
-  assert.match(field, /area \/ 91_000/);
-  assert.match(field, /clamp\(area \/ 91_000, 37, 154\)/);
+  assert.match(field, /area \/ 260_000/);
+  assert.match(field, /clamp\(area \/ 260_000, 12, 48\)/);
   assert.match(field, /hoverUntil = now \+ 0\.45/);
 
   // Per-frame cost guards. drop-shadow/shadowBlur are what made the old DOM
