@@ -56,6 +56,7 @@ test("exports the buzzdir catalog for static hosting", async () => {
     "ProductClank",
     "Wailyn MEGACORP",
     "nearbuilders",
+    "A2A network",
   ]) {
     assert.match(html, new RegExp(name));
   }
@@ -77,7 +78,7 @@ test("exports the buzzdir catalog for static hosting", async () => {
       /<article class="community-card" id="community-([^"]+)" data-community-id="\1"><a class="community-card-hitbox" href="([^"]+)"[\s\S]*?<span class="card-access card-access-(public|invite)">/g,
     ),
   ];
-  assert.equal(cards.length, 48);
+  assert.equal(cards.length, 49);
   assert.equal(new Set(cards.map(([, id]) => id)).size, cards.length);
   for (const [, , href, access] of cards) {
     if (access === "public") {
@@ -181,6 +182,13 @@ test("exports the buzzdir catalog for static hosting", async () => {
       ({ name, relay }) =>
         name === "nearbuilders" &&
         relay === "wss://nearbuilders.communities.buzz.xyz",
+    ),
+  );
+  assert.ok(
+    addLinks.some(
+      ({ name, relay }) =>
+        name === "A2A network" &&
+        relay === "wss://2link.communities.buzz.xyz",
     ),
   );
   assert.ok(
@@ -490,8 +498,8 @@ test("catalog and deployment contract", async () => {
   const publicUrls = [
     ...communityData.matchAll(/publicUrl:\s*\n?\s*"(https:\/\/[^"]+)"/g),
   ].map(([, url]) => url);
-  assert.equal(relays.length, 48);
-  assert.equal(new Set(relays).size, 48);
+  assert.equal(relays.length, 49);
+  assert.equal(new Set(relays).size, 49);
   assert.equal(inviteUrls.length, 22);
   assert.equal(new Set(inviteUrls).size, 22);
   assert.ok(inviteUrls.every((url) => url.includes("/invite/")));
@@ -523,6 +531,10 @@ test("catalog and deployment contract", async () => {
   assert.match(
     communityData,
     /name: "nearbuilders"[\s\S]{0,320}category: "Builders"[\s\S]{0,160}relay: "wss:\/\/nearbuilders\.communities\.buzz\.xyz"/,
+  );
+  assert.match(
+    communityData,
+    /name: "A2A network"[\s\S]{0,320}category: "GTM"[\s\S]{0,160}relay: "wss:\/\/2link\.communities\.buzz\.xyz"/,
   );
   assert.match(
     communityData,

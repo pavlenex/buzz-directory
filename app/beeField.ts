@@ -6,10 +6,13 @@
  * canvas, so only the ~third of the swarm that is actually on screen costs
  * anything to draw.
  *
- * Flight model is hover-and-boil rather than steer-and-cruise: each bee picks
- * a point near a page element and springs at it hard, then picks another
- * before it has settled. Continuous heading interpolation - what the previous
- * version did - is how birds fly, and it is why the old swarm read as birds.
+ * Flight model is hold-then-dart, and the dart is kinematic, not physical:
+ * each flight is an eased curve from the current station to the next, with
+ * the body facing the path tangent. The previous spring model produced the
+ * three classic tells of a fake insect - slow crawling drift between bursts
+ * (reads as an ant), overshoot that dragged a bee backwards against its own
+ * heading, and constant-speed cruising (reads as a bird). A scripted arc can
+ * do none of those: it starts still, commits, arrives, and holds.
  */
 
 import {
@@ -25,11 +28,12 @@ import {
  * A real bee alternates between holding a point in the air and short, visible
  * darts. Continuous motion at a constant speed reads as a bird; overly long
  * pauses read as walking. The short hover duty cycle below keeps wings moving
- * while making the swarm visibly airborne.
+ * while making the swarm visibly airborne. LANDED keeps its slot (and the
+ * folded sprite frame) but no anchor currently opts into settling, so the
+ * swarm stays airborne end to end.
  */
 const HOVERING = 0;
 const DARTING = 1;
-const APPROACHING = 2;
 const LANDED = 3;
 
 type AnchorGroup = {
@@ -38,28 +42,26 @@ type AnchorGroup = {
   share: number;
   /** How far outside the element bees orbit. */
   pad: number;
-  /** Whether bees are allowed to settle on its top edge. */
-  land: boolean;
 };
 
 const anchorGroups: readonly AnchorGroup[] = [
-  { selector: ".hero h1", share: 5, pad: 52, land: false },
-  { selector: ".hero-deck", share: 1.2, pad: 36, land: false },
-  { selector: ".hero-actions .button", share: 1.8, pad: 24, land: false },
-  { selector: ".cluster-label", share: 0.6, pad: 20, land: false },
-  { selector: ".feature-cell", share: 2, pad: 26, land: false },
-  { selector: ".scroll-cue", share: 0.6, pad: 18, land: false },
-  { selector: ".buzz-ticker", share: 3, pad: 22, land: false },
-  { selector: ".section-heading h2", share: 4, pad: 32, land: false },
-  { selector: ".search-box", share: 3, pad: 22, land: false },
-  { selector: ".community-card", share: 22, pad: 18, land: false },
-  { selector: ".manifesto h2", share: 3, pad: 32, land: false },
-  { selector: ".manifesto-actions .button", share: 3, pad: 20, land: false },
-  { selector: ".manifesto article", share: 5, pad: 22, land: false },
-  { selector: ".list-hive h2", share: 3, pad: 30, land: false },
-  { selector: ".listing-form", share: 4, pad: 24, land: false },
-  { selector: ".cta-comb", share: 2, pad: 20, land: false },
-  { selector: ".footer-links a", share: 2, pad: 18, land: false },
+  { selector: ".hero h1", share: 5, pad: 52 },
+  { selector: ".hero-deck", share: 1.2, pad: 36 },
+  { selector: ".hero-actions .button", share: 1.8, pad: 24 },
+  { selector: ".cluster-label", share: 0.6, pad: 20 },
+  { selector: ".feature-cell", share: 2, pad: 26 },
+  { selector: ".scroll-cue", share: 0.6, pad: 18 },
+  { selector: ".buzz-ticker", share: 3, pad: 22 },
+  { selector: ".section-heading h2", share: 4, pad: 32 },
+  { selector: ".search-box", share: 3, pad: 22 },
+  { selector: ".community-card", share: 22, pad: 18 },
+  { selector: ".manifesto h2", share: 3, pad: 32 },
+  { selector: ".manifesto-actions .button", share: 3, pad: 20 },
+  { selector: ".manifesto article", share: 5, pad: 22 },
+  { selector: ".list-hive h2", share: 3, pad: 30 },
+  { selector: ".listing-form", share: 4, pad: 24 },
+  { selector: ".cta-comb", share: 2, pad: 20 },
+  { selector: ".footer-links a", share: 2, pad: 18 },
 ];
 
 type Anchor = {
@@ -67,9 +69,6 @@ type Anchor = {
   cy: number;
   rx: number;
   ry: number;
-  top: number;
-  halfWidth: number;
-  land: boolean;
   weight: number;
 };
 
@@ -83,8 +82,6 @@ type ExclusionZone = {
 type Bee = {
   x: number;
   y: number;
-  vx: number;
-  vy: number;
   anchor: number;
   size: number;
   tint: number;
@@ -96,6 +93,12 @@ type Bee = {
   wingRate: number;
   orbit: number;
   hopRange: number;
+  /**
+   * Drawn opacity, eased in on spawn and toward 0 when the quality valve
+   * idles the bee. Popping in and out read as bees randomly vanishing; a
+   * short fade does not.
+   */
+  alpha: number;
   /** The point in the air this bee is currently holding. */
   stationX: number;
   stationY: number;
@@ -103,11 +106,19 @@ type Bee = {
   bobRate: number;
   bobAmount: number;
   state: number;
+  hoverStart: number;
   hoverUntil: number;
   nextMigrate: number;
-  nextLandCheck: number;
-  deadline: number;
-  landAngle: number;
+  /** Current dart: eased quadratic arc from `dartFrom` to `station`. */
+  dartFromX: number;
+  dartFromY: number;
+  dartCtrlX: number;
+  dartCtrlY: number;
+  dartStart: number;
+  dartTime: number;
+  /** Small perpendicular waver along the arc, zeroed at both endpoints. */
+  weaveAmp: number;
+  weaveCycles: number;
 };
 
 const TAU = Math.PI * 2;
@@ -169,9 +180,6 @@ export function createBeeField(host: HTMLElement): BeeField {
           cy: rect.top + scrollY + rect.height / 2,
           rx: rect.width / 2 + group.pad,
           ry: rect.height / 2 + group.pad,
-          top: rect.top + scrollY - 4,
-          halfWidth: rect.width / 2,
-          land: group.land,
           weight,
         });
       }
@@ -183,9 +191,6 @@ export function createBeeField(host: HTMLElement): BeeField {
         cy: viewHeight / 2,
         rx: viewWidth / 2.4,
         ry: viewHeight / 2.4,
-        top: viewHeight / 2,
-        halfWidth: viewWidth / 3,
-        land: false,
         weight: 1,
       });
     }
@@ -193,9 +198,10 @@ export function createBeeField(host: HTMLElement): BeeField {
     anchors = next;
     anchorTotalWeight = next.reduce((sum, anchor) => sum + anchor.weight, 0);
 
-    // Keep the swarm in the negative space around copy and controls. This is
-    // especially important on phones, where the gutters are barely bee-wide,
-    // but it also prevents desktop bees from obscuring labels mid-flight.
+    // Keep the swarm's *stations* in the negative space around copy and
+    // controls: a bee may cross these rects mid-dart, but it never stops over
+    // them. Hiding bees inside the rects instead - what earlier versions did -
+    // made bees blink out mid-flight, which reads as a bug, not politeness.
     exclusionZones = [];
     const protectedElements = document.querySelectorAll<HTMLElement>(
       [
@@ -239,6 +245,15 @@ export function createBeeField(host: HTMLElement): BeeField {
     return anchors.length - 1;
   }
 
+  function insideExclusion(x: number, y: number) {
+    for (const zone of exclusionZones) {
+      if (x >= zone.left && x <= zone.right && y >= zone.top && y <= zone.bottom) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   // ------------------------------------------------------------------- bees
 
   function desiredBeeCount() {
@@ -257,37 +272,62 @@ export function createBeeField(host: HTMLElement): BeeField {
   /** Pick the next point in the air for this bee to hold. */
   function chooseStation(bee: Bee) {
     const anchor = anchors[bee.anchor] ?? anchors[0];
-    const theta = Math.random() * TAU;
-    const spread = 1.05 + Math.random() * 0.75;
-    const aimX =
-      anchor.cx + Math.cos(theta) * (anchor.rx * spread + bee.orbit * 0.4);
-    const aimY =
-      anchor.cy + Math.sin(theta) * (anchor.ry * spread + bee.orbit * 0.4);
 
-    // Hop only part of the way. Aiming straight at a point on the anchor
-    // ellipse meant a bee beside the huge hero headline could be handed a
-    // target 700px away and would streak across it.
-    const deltaX = aimX - bee.x;
-    const deltaY = aimY - bee.y;
-    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY) || 1;
-    const hop = Math.min(distance, 30 + Math.random() * bee.hopRange);
+    // A handful of samples, keeping the first station that is not on top of
+    // protected copy, so a bee never parks over something the visitor is
+    // trying to read.
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      const theta = Math.random() * TAU;
+      const spread = 1.05 + Math.random() * 0.75;
+      const aimX =
+        anchor.cx + Math.cos(theta) * (anchor.rx * spread + bee.orbit * 0.4);
+      const aimY =
+        anchor.cy + Math.sin(theta) * (anchor.ry * spread + bee.orbit * 0.4);
 
-    bee.stationX = bee.x + (deltaX / distance) * hop;
-    bee.stationY = bee.y + (deltaY / distance) * hop;
+      // Hop only part of the way. Aiming straight at a point on the anchor
+      // ellipse meant a bee beside the huge hero headline could be handed a
+      // target 700px away and would streak across it.
+      const deltaX = aimX - bee.x;
+      const deltaY = aimY - bee.y;
+      const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY) || 1;
+      const hop = Math.min(distance, 30 + Math.random() * bee.hopRange);
+
+      bee.stationX = bee.x + (deltaX / distance) * hop;
+      bee.stationY = bee.y + (deltaY / distance) * hop;
+      if (!insideExclusion(bee.stationX, bee.stationY)) break;
+    }
   }
 
   function beginHover(bee: Bee, now: number) {
     bee.state = HOVERING;
-    bee.hoverUntil = now + 0.45 + Math.random() * 1.25;
+    bee.hoverStart = now;
+    bee.hoverUntil = now + 0.45 + Math.random() * 0.75;
   }
 
+  /** Script the next flight: an eased arc from here to a fresh station. */
   function beginDart(bee: Bee, now: number) {
+    const fromX = bee.x;
+    const fromY = bee.y;
     chooseStation(bee);
+
+    const deltaX = bee.stationX - fromX;
+    const deltaY = bee.stationY - fromY;
+    const distance = Math.hypot(deltaX, deltaY) || 1;
+
+    // Bow the control point sideways so flights are arcs, not rails.
+    const bow =
+      distance * (0.1 + Math.random() * 0.2) * (Math.random() < 0.5 ? -1 : 1);
+    bee.dartFromX = fromX;
+    bee.dartFromY = fromY;
+    bee.dartCtrlX = fromX + deltaX * 0.5 - (deltaY / distance) * bow;
+    bee.dartCtrlY = fromY + deltaY * 0.5 + (deltaX / distance) * bow;
+
+    bee.dartStart = now;
+    // Duration scales with distance: standing start, quick middle, soft stop.
+    bee.dartTime = clamp(distance / (240 + Math.random() * 140), 0.28, 1.1);
+    bee.weaveAmp = (2 + Math.random() * 4) * (Math.random() < 0.5 ? -1 : 1);
+    bee.weaveCycles = 1 + Math.random() * 1.5;
     bee.state = DARTING;
-    // Hard cap on burst length. Whatever distance is left when it expires gets
-    // absorbed by the hover spring, which reads as the bee arriving and
-    // settling rather than braking.
-    bee.deadline = now + 0.3 + Math.random() * 0.28;
   }
 
   function migrate(bee: Bee, now: number) {
@@ -312,13 +352,21 @@ export function createBeeField(host: HTMLElement): BeeField {
   function spawnBee(now: number): Bee {
     const anchorIndex = pickWeightedAnchor();
     const anchor = anchors[anchorIndex];
-    const theta = Math.random() * TAU;
+    let theta = Math.random() * TAU;
+    let x = anchor.cx + Math.cos(theta) * anchor.rx;
+    let y = anchor.cy + Math.sin(theta) * anchor.ry;
+
+    // The spawn point doubles as the first hover station, so give it the same
+    // stay-off-the-copy treatment chooseStation applies.
+    for (let attempt = 0; attempt < 4 && insideExclusion(x, y); attempt += 1) {
+      theta = Math.random() * TAU;
+      x = anchor.cx + Math.cos(theta) * anchor.rx;
+      y = anchor.cy + Math.sin(theta) * anchor.ry;
+    }
 
     const bee: Bee = {
-      x: anchor.cx + Math.cos(theta) * anchor.rx,
-      y: anchor.cy + Math.sin(theta) * anchor.ry,
-      vx: 0,
-      vy: 0,
+      x,
+      y,
       anchor: anchorIndex,
       size: 19 + Math.random() * Math.random() * 26,
       tint:
@@ -326,28 +374,33 @@ export function createBeeField(host: HTMLElement): BeeField {
           ? 0
           : 1 + Math.floor(Math.random() * (beeTints.length - 1)),
       angle: theta,
-      yaw: (Math.random() - 0.5) * 1.6,
+      yaw: (Math.random() - 0.5) * 0.8,
       shiverPhase: Math.random() * TAU,
       shiverAmount: 0.02 + Math.random() * 0.04,
       wingPhase: Math.random() * FLIGHT_FRAMES,
       wingRate: 52 + Math.random() * 28,
       orbit: 18 + Math.random() * 50,
-      hopRange: 65 + Math.random() * 95,
-      stationX: 0,
-      stationY: 0,
+      hopRange: 80 + Math.random() * 120,
+      alpha: 0,
+      stationX: x,
+      stationY: y,
       bobPhase: Math.random() * TAU,
       bobRate: 1.5 + Math.random() * 1.9,
       bobAmount: 1.4 + Math.random() * 3.1,
       state: HOVERING,
+      hoverStart: 0,
       hoverUntil: 0,
       nextMigrate: now + Math.random() * 20,
-      nextLandCheck: now + 3 + Math.random() * 14,
-      deadline: 0,
-      landAngle: 0,
+      dartFromX: x,
+      dartFromY: y,
+      dartCtrlX: x,
+      dartCtrlY: y,
+      dartStart: 0,
+      dartTime: 1,
+      weaveAmp: 0,
+      weaveCycles: 1,
     };
 
-    bee.stationX = bee.x;
-    bee.stationY = bee.y;
     beginHover(bee, now + Math.random() * 2);
     return bee;
   }
@@ -362,7 +415,9 @@ export function createBeeField(host: HTMLElement): BeeField {
 
     targetCount = desiredBeeCount();
     while (bees.length < targetCount) bees.push(spawnBee(now));
-    if (bees.length > targetCount) bees.length = targetCount;
+    // Never truncate the pool mid-session: chopping the array made whole
+    // clusters of drawn bees vanish in one frame whenever filtering shrank
+    // the page. Surplus bees just fade out through the activeCount valve.
     activeCount = Math.min(activeCount || targetCount, targetCount);
   }
 
@@ -392,116 +447,73 @@ export function createBeeField(host: HTMLElement): BeeField {
   // ------------------------------------------------------------ simulation
 
   function step(bee: Bee, dt: number, now: number) {
-    const anchor = anchors[bee.anchor] ?? anchors[0];
-
-    if (bee.state === LANDED) {
-      if (now >= bee.deadline) {
-        const kick = 60 + Math.random() * 80;
-        const away = -Math.PI / 2 + (Math.random() - 0.5) * 1.4;
-        bee.vx = Math.cos(away) * kick;
-        bee.vy = Math.sin(away) * kick;
-        bee.nextLandCheck = now + 9 + Math.random() * 16;
+    if (bee.state === HOVERING) {
+      if (now >= bee.hoverUntil) {
+        if (now >= bee.nextMigrate) migrate(bee, now);
         beginDart(bee, now);
-      }
-      return;
-    }
-
-    if (bee.state === HOVERING && now >= bee.hoverUntil) {
-      if (now >= bee.nextMigrate) migrate(bee, now);
-
-      const mayLand = now >= bee.nextLandCheck;
-      if (mayLand) bee.nextLandCheck = now + 8 + Math.random() * 16;
-
-      if (mayLand && anchor.land && Math.random() < 0.5) {
-        bee.state = APPROACHING;
-        bee.stationX = anchor.cx + (Math.random() - 0.5) * anchor.halfWidth * 1.5;
-        bee.stationY = anchor.top - bee.size * 0.16;
-        bee.deadline = now + 1.8;
-        bee.landAngle =
-          (Math.random() - 0.5) * 0.5 + (Math.random() < 0.5 ? 0 : Math.PI);
       } else {
-        beginDart(bee, now);
+        // Hold station on a small two-axis bob. Position is written directly,
+        // not steered: springs left residual drift and jitter at walking
+        // speed, which is exactly how an ant crosses a page. The ramp keeps
+        // the bob from snapping sideways on the first hover frame.
+        const ramp = clamp((now - bee.hoverStart) * 3, 0, 1);
+        bee.x =
+          bee.stationX +
+          Math.sin(now * bee.bobRate + bee.bobPhase) * bee.bobAmount * ramp;
+        bee.y =
+          bee.stationY +
+          Math.sin(now * bee.bobRate * 0.71 + bee.bobPhase * 1.7) *
+            bee.bobAmount *
+            0.8 *
+            ramp;
+
+        // Idle heading wanders a few degrees at most; a parked insect
+        // pirouetting in place is another ant tell.
+        bee.angle += bee.yaw * dt;
+        if (Math.random() < dt * 0.4) bee.yaw = (Math.random() - 0.5) * 0.8;
       }
-    } else if (bee.state === DARTING && now >= bee.deadline) {
-      beginHover(bee, now);
     }
 
-    const hovering = bee.state === HOVERING;
-    const approaching = bee.state === APPROACHING;
+    if (bee.state === DARTING) {
+      const t = clamp((now - bee.dartStart) / bee.dartTime, 0, 1);
+      // Smoothstep: still at launch, fastest mid-arc, gentle arrival.
+      const eased = t * t * (3 - 2 * t);
+      const inv = 1 - eased;
 
-    // While holding station the bee aims at its point plus a small two-axis
-    // bob, which is what keeps a stationary bee from looking frozen.
-    const targetX = hovering
-      ? bee.stationX + Math.sin(now * bee.bobRate + bee.bobPhase) * bee.bobAmount
-      : bee.stationX;
-    const targetY = hovering
-      ? bee.stationY +
-        Math.sin(now * bee.bobRate * 0.71 + bee.bobPhase * 1.7) *
-          bee.bobAmount *
-          0.8
-      : bee.stationY;
+      const arcX =
+        inv * inv * bee.dartFromX +
+        2 * inv * eased * bee.dartCtrlX +
+        eased * eased * bee.stationX;
+      const arcY =
+        inv * inv * bee.dartFromY +
+        2 * inv * eased * bee.dartCtrlY +
+        eased * eased * bee.stationY;
 
-    const deltaX = targetX - bee.x;
-    const deltaY = targetY - bee.y;
+      // Perpendicular waver, enveloped to zero at both endpoints so it never
+      // kinks the launch or the arrival.
+      const spanX = bee.stationX - bee.dartFromX;
+      const spanY = bee.stationY - bee.dartFromY;
+      const span = Math.hypot(spanX, spanY) || 1;
+      const weave =
+        Math.sin(t * Math.PI * bee.weaveCycles * 2) *
+        Math.sin(t * Math.PI) *
+        bee.weaveAmp;
+      bee.x = arcX - (spanY / span) * weave;
+      bee.y = arcY + (spanX / span) * weave;
 
-    // Hover is a stiff, nearly critically damped spring: it parks the bee.
-    // Dart is loose and underdamped: it throws the bee at the new station.
-    let stiffness = 24;
-    let damping = 5.2;
-    let jitter = 240;
-    let limit = 430;
-    if (hovering) {
-      stiffness = 34;
-      damping = 9.6;
-      jitter = 300;
-      limit = 210;
-    } else if (approaching) {
-      stiffness = 17;
-      damping = 8.2;
-      jitter = 150;
-      limit = 230;
-    }
+      // Face the arc tangent. Heading and motion share one source of truth,
+      // so a bee can no longer translate against its own facing - the
+      // "flying backwards" artefact the spring model produced.
+      const tangentX =
+        inv * (bee.dartCtrlX - bee.dartFromX) +
+        eased * (bee.stationX - bee.dartCtrlX);
+      const tangentY =
+        inv * (bee.dartCtrlY - bee.dartFromY) +
+        eased * (bee.stationY - bee.dartCtrlY);
+      const course = Math.atan2(tangentY, tangentX);
+      bee.angle += shortestTurn(bee.angle, course) * Math.min(1, dt * 12);
 
-    bee.vx +=
-      (deltaX * stiffness - bee.vx * damping + (Math.random() - 0.5) * jitter) *
-      dt;
-    bee.vy +=
-      (deltaY * stiffness - bee.vy * damping + (Math.random() - 0.5) * jitter) *
-      dt;
-
-    const speed = Math.sqrt(bee.vx * bee.vx + bee.vy * bee.vy);
-    if (speed > limit) {
-      const scale = limit / speed;
-      bee.vx *= scale;
-      bee.vy *= scale;
-    }
-
-    bee.x += bee.vx * dt;
-    bee.y += bee.vy * dt;
-
-    if (approaching) {
-      if (deltaX * deltaX + deltaY * deltaY < 64 && speed < 60) {
-        bee.state = LANDED;
-        bee.x = bee.stationX;
-        bee.y = bee.stationY;
-        bee.vx = 0;
-        bee.vy = 0;
-        bee.angle = bee.landAngle;
-        bee.deadline = now + 1.1 + Math.random() * 2.8;
-        return;
-      }
-      if (now >= bee.deadline) beginHover(bee, now);
-    }
-
-    // Body heading. Below the threshold the velocity angle is pure noise, so
-    // the bee keeps its last heading and yaws slowly instead of spinning -
-    // that slow idle yaw while holding station is most of what says "bee".
-    if (speed > 55) {
-      const course = Math.atan2(bee.vy, bee.vx);
-      bee.angle += shortestTurn(bee.angle, course) * Math.min(1, dt * 9);
-    } else {
-      bee.angle += bee.yaw * dt;
-      if (Math.random() < dt * 0.45) bee.yaw = (Math.random() - 0.5) * 1.5;
+      if (t >= 1) beginHover(bee, now);
     }
 
     bee.wingPhase += bee.wingRate * dt;
@@ -509,14 +521,24 @@ export function createBeeField(host: HTMLElement): BeeField {
 
   // ---------------------------------------------------------------- render
 
-  function draw(scrollX: number, scrollY: number) {
+  function draw(scrollX: number, scrollY: number, dt: number) {
     const cellSource = CELL * atlas.scale;
+    const fade = Math.min(1, dt * 7);
 
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    for (let index = 0; index < activeCount; index += 1) {
+    for (let index = 0; index < bees.length; index += 1) {
       const bee = bees[index];
+
+      // A bee is shown unless the quality valve idled it, and it eases out
+      // and back instead of popping. It is never hidden for overlapping the
+      // page: mid-flight bees may cross copy, and blinking them out there is
+      // what used to read as bees randomly vanishing.
+      const shown = index < activeCount;
+      bee.alpha += ((shown ? 1 : 0) - bee.alpha) * fade;
+      if (bee.alpha < 0.03) continue;
+
       const screenX = bee.x - scrollX;
       const screenY = bee.y - scrollY;
       const margin = bee.size;
@@ -529,20 +551,6 @@ export function createBeeField(host: HTMLElement): BeeField {
       ) {
         continue;
       }
-
-      let overlapsContent = false;
-      for (const zone of exclusionZones) {
-        if (
-          bee.x >= zone.left &&
-          bee.x <= zone.right &&
-          bee.y >= zone.top &&
-          bee.y <= zone.bottom
-        ) {
-          overlapsContent = true;
-          break;
-        }
-      }
-      if (overlapsContent) continue;
 
       const frame =
         bee.state === LANDED
@@ -559,6 +567,7 @@ export function createBeeField(host: HTMLElement): BeeField {
       const cos = Math.cos(angle) * k;
       const sin = Math.sin(angle) * k;
 
+      ctx.globalAlpha = bee.alpha;
       ctx.setTransform(cos, sin, -sin, cos, screenX * dpr, screenY * dpr);
       ctx.drawImage(
         atlas.canvas,
@@ -572,6 +581,8 @@ export function createBeeField(host: HTMLElement): BeeField {
         CELL,
       );
     }
+
+    ctx.globalAlpha = 1;
   }
 
   function drawStill() {
@@ -583,7 +594,8 @@ export function createBeeField(host: HTMLElement): BeeField {
       bee.state = HOVERING;
       bee.wingPhase = 1;
     }
-    draw(window.scrollX, window.scrollY);
+    // dt of 1 collapses the fade so the single still frame is exact.
+    draw(window.scrollX, window.scrollY, 1);
   }
 
   // ------------------------------------------------------------------ loop
@@ -613,7 +625,7 @@ export function createBeeField(host: HTMLElement): BeeField {
       if (bee.y < simTop || bee.y > simBottom) continue;
       step(bee, dt, clock);
     }
-    draw(scrollX, scrollY);
+    draw(scrollX, scrollY, dt);
 
     // Adaptive valve: if we are consistently missing frames, thin the swarm
     // rather than let the page stutter.
