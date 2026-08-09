@@ -73,9 +73,12 @@ canvas {
   --comb-pattern: url("data:image/svg+xml,%3Csvg width='144' height='84' viewBox='0 0 144 84' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%2311120f' stroke-opacity='.055' stroke-width='1'%3E%3Cpath d='M24 1h48l24 41-24 41H24L0 42Z'/%3E%3Cpath d='M96-41h48l24 41-24 41H96L72 0Z'/%3E%3Cpath d='M96 43h48l24 41-24 41H96L72 84Z'/%3E%3C/g%3E%3C/svg%3E");
 }
 
+/* The canvas behind unrasterised tiles is the html background. Ink here meant
+   every fast scroll flashed black before the page painted; paper matches the
+   directory so late tiles go unnoticed. */
 html {
   scroll-behavior: smooth;
-  background: var(--ink);
+  background: var(--paper);
 }
 
 body {
@@ -656,16 +659,26 @@ footer > * {
   contain-intrinsic-size: auto 230px;
   border: 0;
   padding: 2px;
-  background: var(--ink);
+  background: var(--white);
   color: inherit;
   font: inherit;
   text-align: left;
   text-decoration: none;
   clip-path: var(--comb-card-clip);
   cursor: pointer;
-  transition:
-    background 180ms ease,
-    transform 180ms ease;
+  transition: transform 180ms ease;
+}
+
+/* The ink rim is generated content (same layering as .feature-cell), so a card
+   whose contents content-visibility has skipped paints as a quiet white hex
+   instead of flashing a solid black one as it scrolls in. */
+.community-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--ink);
+  clip-path: inherit;
+  transition: background 180ms ease;
 }
 
 .community-card-hitbox {
@@ -702,13 +715,20 @@ footer > * {
 
 .community-card:hover,
 .community-card:target {
-  background: var(--yellow);
   transform: translateY(-3px);
 }
 
+.community-card:hover::before,
+.community-card:target::before {
+  background: var(--yellow);
+}
+
 .community-card:target {
-  background: var(--blue);
   filter: drop-shadow(7px 7px 0 var(--ink));
+}
+
+.community-card:target::before {
+  background: var(--blue);
 }
 
 .card-access {
@@ -785,6 +805,8 @@ footer > * {
   text-transform: uppercase;
 }
 
+/* Quiet utility, not a call to action: a bare glyph that only asserts itself
+   on hover and when it confirms a copy. */
 .card-share {
   position: relative;
   z-index: 3;
@@ -793,41 +815,38 @@ footer > * {
   height: 30px;
   margin-left: auto;
   padding: 0;
-  border: 1px solid rgba(17, 18, 15, 0.55);
-  background: var(--paper);
+  border: 0;
+  background: transparent;
+  color: rgba(17, 18, 15, 0.5);
   cursor: pointer;
   pointer-events: auto;
   display: grid;
   place-items: center;
-  font: 950 15px/1 var(--font-ui);
+  font: 950 14px/1 var(--font-ui);
   transition:
-    background 140ms ease,
     color 140ms ease,
     transform 140ms ease;
 }
 
 .card-share svg {
-  width: 15px;
-  height: 15px;
-  fill: var(--paper);
+  width: 16px;
+  height: 16px;
+  fill: var(--white);
   stroke: currentColor;
-  stroke-width: 1.5;
+  stroke-width: 1.6;
 }
 
 .card-share:hover {
-  background: var(--yellow);
   color: var(--ink);
   transform: translateY(-1px);
 }
 
 .card-share[data-status="copied"] {
-  background: var(--green);
-  border-color: var(--ink);
+  color: #116b36;
 }
 
 .card-share[data-status="ready"] {
-  background: var(--yellow);
-  border-color: var(--ink);
+  color: var(--ink);
 }
 
 .card-share:active {
@@ -1757,12 +1776,6 @@ footer {
   .card-category {
     padding: 6px 7px;
     font-size: 8px;
-  }
-
-  .card-share {
-    flex-basis: 28px;
-    width: 28px;
-    height: 28px;
   }
 
   .listing-tabs button {

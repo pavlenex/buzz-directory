@@ -53,6 +53,7 @@ export type Community = {
  * - GitHub issue #6: ProductClank (relay only)
  * - GitHub issue #8: Wailyn MEGACORP (relay only)
  * - GitHub issue #9: nearbuilders (relay only)
+ * - GitHub issue #15: A2A network (relay only)
  */
 export const communities: readonly Community[] = [
   // --- Featured (hero order; not re-sorted with the directory grid) ---
@@ -98,6 +99,13 @@ export const communities: readonly Community[] = [
   },
 
   // --- Directory (A–Z by name; non-featured only) ---
+  {
+    name: "A2A network",
+    description:
+      "Alter2Alter: business-oriented digital twin social network for precision supply-demand matching.",
+    category: "GTM",
+    relay: "wss://2link.communities.buzz.xyz",
+  },
   {
     name: "audiodev",
     description: "Audio developers collaborating and building together on Buzz.",
