@@ -78,7 +78,7 @@ test("exports the buzzdir catalog for static hosting", async () => {
       /<article class="community-card" id="community-([^"]+)" data-community-id="\1"><a class="community-card-hitbox" href="([^"]+)"[\s\S]*?<span class="card-access card-access-(public|invite)">/g,
     ),
   ];
-  assert.equal(cards.length, 49);
+  assert.equal(cards.length, 50);
   assert.equal(new Set(cards.map(([, id]) => id)).size, cards.length);
   for (const [, , href, access] of cards) {
     if (access === "public") {
@@ -498,12 +498,12 @@ test("catalog and deployment contract", async () => {
   const publicUrls = [
     ...communityData.matchAll(/publicUrl:\s*\n?\s*"(https:\/\/[^"]+)"/g),
   ].map(([, url]) => url);
-  assert.equal(relays.length, 49);
-  assert.equal(new Set(relays).size, 49);
+  assert.equal(relays.length, 50);
+  assert.equal(new Set(relays).size, 50);
   assert.equal(inviteUrls.length, 22);
   assert.equal(new Set(inviteUrls).size, 22);
   assert.ok(inviteUrls.every((url) => url.includes("/invite/")));
-  assert.deepEqual(publicUrls, ["https://buzz.cashu.space"]);
+  assert.deepEqual(publicUrls, ["https://buzz.cashu.space", "https://hachiflow.com/hive"]);
   assert.match(
     communityData,
     /name: "meshllm"[\s\S]{0,320}inviteUrl:\s*"https:\/\/meshllm\.communities\.buzz\.xyz\/invite\/v2\.snrLPAfXbJqLeUs4xZObggIjTXGAElp5PSjn0DsIWt0"/,
