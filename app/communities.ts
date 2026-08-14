@@ -244,6 +244,14 @@ export const communities: readonly Community[] = [
     relay: "wss://gtmelite.communities.buzz.xyz",
   },
   {
+    name: "hachiflow",
+    description:
+      "Hachiflow HQ: the managed Buzz hosting company running itself in its own hive, humans and agents selling in public.",
+    category: "GTM",
+    relay: "wss://hivehq.hachiflow.chat",
+    publicUrl: "https://hachiflow.com/hive",
+  },
+  {
     name: "hashie",
     description:
       "Buzz instance advertised with a bare relay share on X and no shared invite link.",
